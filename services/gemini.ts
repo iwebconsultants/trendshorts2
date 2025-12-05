@@ -4,7 +4,8 @@ import { StrategyOption, ShortConcept, ChatMessage } from "../types";
 // Initialize the client
 const getAiClient = () => {
     // Check if API key is present in environment (injected by the runtime)
-    const apiKey = process.env.API_KEY;
+    // Or check localStorage for manually entered key in deployed version
+    const apiKey = process.env.API_KEY || localStorage.getItem('gemini_api_key');
     if (!apiKey) {
         throw new Error("API Key not found. Please select a key.");
     }
@@ -311,7 +312,8 @@ export const generateVideoAsset = async (prompt: string, duration?: string, reso
     if (!uri) throw new Error("Failed to generate video URI");
     
     // Append API key for download access as per guidelines
-    return `${uri}&key=${process.env.API_KEY}`;
+    const apiKey = process.env.API_KEY || localStorage.getItem('gemini_api_key');
+    return `${uri}&key=${apiKey}`;
 };
 
 /**
