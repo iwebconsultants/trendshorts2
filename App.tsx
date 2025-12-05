@@ -5,6 +5,12 @@ import { PrototypeDashboard } from './components/PrototypeDashboard';
 import { AppStage, StrategyOption, ToolOption, AIStudio } from './types';
 import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle } from 'lucide-react';
 
+declare global {
+  interface Window {
+    aistudio?: AIStudio;
+  }
+}
+
 // --- Components for Landing Page Sections ---
 
 const StepByStepPreview: React.FC = () => {
@@ -255,6 +261,50 @@ const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
     </div>
   );
 };
+
+const Footer: React.FC = () => (
+  <footer className="bg-slate-50 border-t border-slate-200 py-12">
+    <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+       <div>
+         <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+              <Zap size={18} fill="currentColor" />
+            </div>
+            <span className="text-xl font-bold text-slate-900">TrendShorts</span>
+         </div>
+         <p className="text-sm text-slate-500">
+           AI-powered automated video creation suite for modern creators.
+         </p>
+       </div>
+       <div>
+         <h4 className="font-bold text-slate-900 mb-4">Product</h4>
+         <ul className="space-y-2 text-sm text-slate-500">
+           <li><span className="hover:text-indigo-600 cursor-pointer">Features</span></li>
+           <li><span className="hover:text-indigo-600 cursor-pointer">Pricing</span></li>
+           <li><span className="hover:text-indigo-600 cursor-pointer">Workflow</span></li>
+         </ul>
+       </div>
+       <div>
+         <h4 className="font-bold text-slate-900 mb-4">Resources</h4>
+         <ul className="space-y-2 text-sm text-slate-500">
+           <li><span className="hover:text-indigo-600 cursor-pointer">Blog</span></li>
+           <li><span className="hover:text-indigo-600 cursor-pointer">Community</span></li>
+           <li><span className="hover:text-indigo-600 cursor-pointer">Help Center</span></li>
+         </ul>
+       </div>
+       <div>
+         <h4 className="font-bold text-slate-900 mb-4">Legal</h4>
+         <ul className="space-y-2 text-sm text-slate-500">
+           <li><span className="hover:text-indigo-600 cursor-pointer">Privacy</span></li>
+           <li><span className="hover:text-indigo-600 cursor-pointer">Terms</span></li>
+         </ul>
+       </div>
+    </div>
+    <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-200 text-center text-sm text-slate-400">
+      © 2024 TrendShorts AI. All rights reserved.
+    </div>
+  </footer>
+);
 
 // --- Landing Page Component ---
 type LandingSectionType = 'HOME' | 'WORKFLOW' | 'PRICING' | 'LOGIN';
@@ -600,276 +650,132 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   );
 };
 
-// --- Footer Component ---
-const Footer: React.FC = () => {
-    return (
-        <footer className="bg-white border-t border-slate-200 py-12">
-            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white">
-                        <Zap size={16} fill="currentColor" />
-                    </div>
-                    <span className="font-bold text-slate-900">TrendShorts</span>
-                </div>
-                <div className="text-slate-500 text-sm">
-                    &copy; 2025 TrendShorts AI. Powered by Google Gemini & Veo.
-                </div>
-                <div className="flex gap-6 text-slate-400">
-                    <a href="#" className="hover:text-slate-900"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.63 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" /></svg></a>
-                    <a href="#" className="hover:text-slate-900"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg></a>
-                </div>
-            </div>
-        </footer>
-    );
-};
-
-// --- Main App Component ---
 const App: React.FC = () => {
-  const [view, setView] = useState<'LANDING' | 'APP'>('LANDING');
-  const [stage, setStage] = useState<AppStage>(AppStage.BRAINSTORM);
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [selectedStrategy, setSelectedStrategy] = useState<StrategyOption | null>(null);
-  const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
-  const [apiKeySet, setApiKeySet] = useState(false);
-  const [manualKey, setManualKey] = useState('');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [stage, setStage] = useState<AppStage>(AppStage.BRAINSTORM);
+    
+    // Application State
+    const [selectedGenre, setSelectedGenre] = useState('');
+    const [selectedStrategy, setSelectedStrategy] = useState<StrategyOption | null>(null);
+    const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
 
-  useEffect(() => {
-    // Check for build-time env var
-    if (process.env.API_KEY) {
-        setApiKeySet(true);
-    } else {
-        // Check for runtime persistence
-        const storedKey = localStorage.getItem('gemini_api_key');
-        if (storedKey) setApiKeySet(true);
-        else checkKey();
-    }
-  }, []);
+    const handleLogin = async () => {
+        // Handle API Key selection specifically for Veo/Gemini
+        if (window.aistudio) {
+            try {
+                const hasKey = await window.aistudio.hasSelectedApiKey();
+                if (!hasKey) {
+                    await window.aistudio.openSelectKey();
+                }
+            } catch (e: any) {
+                console.error("API Key selection error", e);
+                // Retry logic if entity not found (race condition or bad state)
+                if (e.message && e.message.includes("Requested entity was not found")) {
+                     try {
+                        await window.aistudio.openSelectKey();
+                     } catch (retryError) {
+                         console.error("Retry failed", retryError);
+                         alert("Please select a valid API key project to continue.");
+                         return;
+                     }
+                }
+            }
+        }
+        
+        setIsLoggedIn(true);
+    };
 
-  const checkKey = async () => {
-       const win = window as unknown as { aistudio?: AIStudio };
-       if (win.aistudio && win.aistudio.hasSelectedApiKey) {
-          const hasKey = await win.aistudio.hasSelectedApiKey();
-          if (hasKey) {
-             setApiKeySet(true);
-          }
-       }
-  }
+    const handleBrainstormComplete = (genre: string, strategy: StrategyOption) => {
+        setSelectedGenre(genre);
+        setSelectedStrategy(strategy);
+        setStage(AppStage.TECH_STACK);
+    };
 
-  const handleKeySelect = async () => {
-      const win = window as unknown as { aistudio?: AIStudio };
-      if (win.aistudio && win.aistudio.openSelectKey) {
-          await win.aistudio.openSelectKey();
-          setApiKeySet(true);
-      } else {
-          // If running outside AI Studio (e.g., Dokploy deployment), allow manual entry
-          if (manualKey.trim().length > 10) {
-              localStorage.setItem('gemini_api_key', manualKey.trim());
-              setApiKeySet(true);
-          } else {
-              alert("Please enter a valid API Key.");
-          }
-      }
-  }
-
-  const handleLogin = () => {
-      setView('APP');
-  };
-
-  const handleLogout = () => {
-      if (window.confirm("Are you sure you want to sign out? Progress will be lost.")) {
-          setView('LANDING');
-          setStage(AppStage.BRAINSTORM);
-          setSelectedGenre('');
-          setSelectedStrategy(null);
-          setSelectedTools([]);
-      }
-  }
-
-  const handleHome = () => {
-    if (window.confirm("Return to home page? This will exit the workspace and lose unsaved progress.")) {
-        setView('LANDING');
+    const handleStackComplete = (tools: ToolOption[]) => {
+        setSelectedTools(tools);
+        setStage(AppStage.CONTENT_GENERATION);
+    };
+    
+    const handleBackToBrainstorm = () => {
         setStage(AppStage.BRAINSTORM);
-        setSelectedGenre('');
+        setSelectedStrategy(null);
+    };
+
+    const handleBackToStack = () => {
+        setStage(AppStage.TECH_STACK);
+    };
+    
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+        setStage(AppStage.BRAINSTORM);
+        // Reset state
         setSelectedStrategy(null);
         setSelectedTools([]);
+        setSelectedGenre('');
+    };
+
+    if (!isLoggedIn) {
+        return <LandingPage onLogin={handleLogin} />;
     }
-  };
-
-  const renderStage = () => {
-    switch (stage) {
-      case AppStage.BRAINSTORM:
-        return (
-          <BrainstormStage 
-            onComplete={(genre, strategy) => {
-              setSelectedGenre(genre);
-              setSelectedStrategy(strategy);
-              setStage(AppStage.TECH_STACK);
-            }} 
-          />
-        );
-      case AppStage.TECH_STACK:
-        return (
-          <TechStackStage
-            onBack={() => setStage(AppStage.BRAINSTORM)}
-            onNext={(tools) => {
-              setSelectedTools(tools);
-              setStage(AppStage.CONTENT_GENERATION);
-            }}
-          />
-        );
-      case AppStage.CONTENT_GENERATION:
-        return (
-          <PrototypeDashboard
-            genre={selectedGenre}
-            strategy={selectedStrategy!}
-            tools={selectedTools}
-            onBack={() => setStage(AppStage.TECH_STACK)}
-          />
-        );
-      default:
-        return <div>Unknown Stage</div>;
-    }
-  };
-
-  if (view === 'LANDING') {
-      return <LandingPage onLogin={handleLogin} />;
-  }
-
-  // APP VIEW Logic
-  if (!apiKeySet) {
-      const isAIStudio = (window as unknown as { aistudio?: any }).aistudio !== undefined;
-      
-      return (
-          <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
-              <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-200 text-center">
-                  <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white mx-auto mb-4 shadow-indigo-200 shadow-md">
-                      <Zap size={28} fill="currentColor" />
-                  </div>
-                  <h1 className="text-2xl font-bold text-slate-900 mb-4">Welcome to TrendShorts</h1>
-                  <p className="text-slate-600 mb-6">
-                      To access the workspace, please connect your Gemini API Key.
-                  </p>
-                  
-                  {isAIStudio ? (
-                      <button 
-                        onClick={handleKeySelect}
-                        title="Open Google AI Studio key selector"
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg w-full flex items-center justify-center gap-2 transition-colors"
-                      >
-                          <Key size={18} />
-                          Select API Key
-                      </button>
-                  ) : (
-                      <div className="space-y-3 text-left">
-                          <label className="text-sm font-bold text-slate-700 block">Enter Gemini API Key</label>
-                          <input 
-                            type="password"
-                            value={manualKey}
-                            onChange={(e) => setManualKey(e.target.value)}
-                            placeholder="AIzaSy..."
-                            className="w-full border border-slate-300 rounded-lg px-4 py-3 outline-none focus:border-indigo-500"
-                          />
-                          <button 
-                            onClick={handleKeySelect}
-                            disabled={!manualKey}
-                            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-lg w-full flex items-center justify-center gap-2 transition-colors"
-                          >
-                              <Key size={18} />
-                              Save & Continue
-                          </button>
-                          <p className="text-xs text-slate-500 text-center pt-2">Key is stored locally in your browser.</p>
+    
+    // Main App Layout
+    return (
+        <div className="h-screen bg-slate-100 flex flex-col font-sans text-slate-900 overflow-hidden">
+             {/* App Header */}
+             <header className="bg-slate-900 text-white h-16 shrink-0 flex items-center justify-between px-6 shadow-md z-20">
+                 <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                         <Zap size={18} fill="currentColor" className="text-white" />
+                     </div>
+                     <span className="font-bold text-lg tracking-tight">TrendShorts Studio</span>
+                 </div>
+                 
+                 <div className="flex items-center gap-4">
+                      {/* Stage Indicator */}
+                      <div className="hidden md:flex bg-slate-800 rounded-full px-4 py-1.5 gap-2 items-center text-xs font-bold uppercase tracking-wider">
+                          <span className={`${stage === AppStage.BRAINSTORM ? 'text-indigo-400' : 'text-slate-500'}`}>1. Brainstorm</span>
+                          <span className="text-slate-600">/</span>
+                          <span className={`${stage === AppStage.TECH_STACK ? 'text-indigo-400' : 'text-slate-500'}`}>2. Stack</span>
+                          <span className="text-slate-600">/</span>
+                          <span className={`${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-400' : 'text-slate-500'}`}>3. Create</span>
                       </div>
-                  )}
 
-                  <div className="mt-6 pt-6 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
-                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="underline hover:text-indigo-600">
-                        View Billing Documentation
-                    </a>
-                    <button onClick={() => setView('LANDING')} className="hover:text-slate-900 font-medium">Back to Home</button>
-                  </div>
-              </div>
-          </div>
-      )
-  }
+                      <div className="h-6 w-px bg-slate-700"></div>
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100 flex flex-col">
-      <div className="max-w-6xl mx-auto p-4 md:p-8 w-full flex-1 flex flex-col">
-        {/* App Header */}
-        <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 pb-6 border-b border-slate-200">
-            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                <div 
-                    className="flex items-center gap-2 cursor-pointer group" 
-                    onClick={handleHome}
-                    title="Return to Home Page"
-                >
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-                        <Zap size={18} fill="currentColor" />
+                      <button 
+                        onClick={handleLogout}
+                        className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"
+                      >
+                         <LogOut size={16} /> Exit
+                      </button>
+                 </div>
+             </header>
+
+             {/* Main Content Area */}
+             <main className="flex-1 overflow-hidden relative">
+                {stage === AppStage.BRAINSTORM && (
+                    <BrainstormStage onComplete={handleBrainstormComplete} />
+                )}
+                
+                {stage === AppStage.TECH_STACK && (
+                    <div className="h-full p-4 md:p-8 max-w-5xl mx-auto">
+                        <TechStackStage onNext={handleStackComplete} onBack={handleBackToBrainstorm} />
                     </div>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-                            TrendShorts
-                        </h1>
-                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Workspace</p>
+                )}
+                
+                {stage === AppStage.CONTENT_GENERATION && selectedStrategy && (
+                    <div className="h-full p-4 md:p-6">
+                        <PrototypeDashboard 
+                            genre={selectedGenre} 
+                            strategy={selectedStrategy} 
+                            tools={selectedTools} 
+                            onBack={handleBackToStack}
+                        />
                     </div>
-                </div>
-            </div>
-            
-            <div className="flex items-center gap-2 bg-white p-1 rounded-full border border-slate-200 shadow-sm">
-                {[
-                  { id: AppStage.BRAINSTORM, label: 'Brainstorm' },
-                  { id: AppStage.TECH_STACK, label: 'Stack' },
-                  { id: AppStage.CONTENT_GENERATION, label: 'Content Gen' }
-                ].map((s, i, arr) => (
-                    <div key={s.id} className="flex items-center">
-                        <div 
-                            title={`Navigate to Step ${i + 1}: ${s.label}`}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
-                                stage === s.id
-                                    ? 'bg-indigo-600 text-white shadow-md' 
-                                    : Object.values(AppStage).indexOf(stage) > i 
-                                        ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' 
-                                        : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                        >
-                            <span className="w-5 h-5 flex items-center justify-center rounded-full bg-white/20 text-xs border border-white/20">
-                                {i + 1}
-                            </span>
-                            <span className="hidden sm:inline">{s.label}</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="flex gap-2">
-                <button 
-                    onClick={handleHome}
-                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                    title="Return to Home Page"
-                >
-                    <Home size={20} />
-                </button>
-                <button 
-                    onClick={handleLogout}
-                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                    title="Sign Out"
-                >
-                    <LogOut size={20} />
-                </button>
-            </div>
-        </header>
-
-        <main className="flex-1 overflow-hidden relative">
-             {renderStage()}
-        </main>
-      </div>
-      
-      {/* Simple in-app footer */}
-      <div className="max-w-6xl mx-auto w-full px-8 py-4 text-center text-xs text-slate-400">
-          TrendShorts Workspace &copy; 2025
-      </div>
-    </div>
-  );
+                )}
+             </main>
+        </div>
+    );
 };
 
 export default App;

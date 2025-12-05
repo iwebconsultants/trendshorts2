@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Safely stringify the API key to avoid object replacement issues
+      // Safely stringify the API key to avoid object replacement issues during build
       'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY || '')
     }
   }
