@@ -321,6 +321,21 @@ export const generateMoreImagePrompts = async (topic: string, script: string, vi
 };
 
 /**
+ * generateImageWithPollinations
+ * Generates an image URL using Pollinations.ai (Flux/SD).
+ * Completely free, no API key required.
+ */
+export const generateImageWithPollinations = async (prompt: string): Promise<string> => {
+    // Pollinations.ai uses simple URL-based generation
+    // We append a random seed to ensure freshness
+    const seed = Math.floor(Math.random() * 1000000);
+    const encodedPrompt = encodeURIComponent(prompt);
+    // Flux is the default high-quality model on Pollinations now
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=720&height=1280&model=flux&seed=${seed}&nologo=true`;
+    return url;
+};
+
+/**
  * generateVideoAsset
  * Uses Veo to generate a short video background for the concept.
  * Note: This requires a paid key and Veo access.
@@ -357,10 +372,12 @@ export const generateVideoAsset = async (prompt: string, duration?: string, reso
         return `${uri}&key=${apiKey}`;
     } catch (error: any) {
         // Handle quota/rate limit errors with helpful message
-        if (error?.message?.includes('quota') || error?.message?.includes('429') || error?.status === 'RESOURCE_EXHAUSTED') {
-            throw new Error(
-                "Veo quota exceeded. Try using Imagen for images instead, or check your API quotas at https://ai.dev/usage?tab=rate-limit"
-            );
+        if (error?.message?.includes('quota') || error?.message?.includes('429') || error?.status === 'RESOURCE_EXHAUSTED' || error?.message?.includes('not found')) {
+            console.warn("Veo generation failed, falling back to Pollinations image (simulation of video)", error);
+            // Verify the prompt is valid, then fallback
+            if (prompt) {
+                return await generateImageWithPollinations(prompt);
+            }
         }
         throw error;
     }
@@ -369,24 +386,41 @@ export const generateVideoAsset = async (prompt: string, duration?: string, reso
 /**
  * generateImageAsset
  * Uses Imagen to generate a static image background for the concept.
+ * Supports fallback to Pollinations.ai (Flux) if Google API fails.
  */
-export const generateImageAsset = async (prompt: string): Promise<string> => {
-    const ai = getAiClient();
+export const generateImageAsset = async (prompt: string, provider: 'google' | 'pollinations' = 'google'): Promise<string> => {
 
-    const response = await ai.models.generateImages({
-        model: 'imagen-3.0-generate-002',  // Updated to correct model name
-        prompt: prompt,
-        config: {
-            numberOfImages: 1,
-            aspectRatio: '9:16',
-            outputMimeType: 'image/jpeg',
+    // Explicitly use Pollinations if requested
+    if (provider === 'pollinations') {
+        return generateImageWithPollinations(prompt);
+    }
+
+    try {
+        const ai = getAiClient();
+        const response = await ai.models.generateImages({
+            model: 'imagen-3.0-generate-002',
+            prompt: prompt,
+            config: {
+                numberOfImages: 1,
+                aspectRatio: '9:16',
+                outputMimeType: 'image/jpeg',
+            }
+        });
+
+        const base64 = response.generatedImages?.[0]?.image?.imageBytes;
+        if (!base64) throw new Error("No image generated");
+
+        return `data:image/jpeg;base64,${base64}`;
+    } catch (error: any) {
+        console.warn("Google Imagen generation failed, attempting fallback to Pollinations.", error);
+
+        // Auto-fallback for common errors
+        if (error?.message?.includes('not found') || error?.message?.includes('404') || error?.message?.includes('quota') || error?.message?.includes('429')) {
+            return generateImageWithPollinations(prompt);
         }
-    });
 
-    const base64 = response.generatedImages?.[0]?.image?.imageBytes;
-    if (!base64) throw new Error("No image generated");
-
-    return `data:image/jpeg;base64,${base64}`;
+        throw error;
+    }
 };
 
 /**

@@ -358,8 +358,8 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
               onClick={() => setActiveSection('LOGIN')}
               title="Sign in to your account"
               className={`px - 6 py - 2.5 rounded - full font - semibold transition - all ${activeSection === 'LOGIN'
-                  ? 'bg-slate-800 text-white'
-                  : 'bg-slate-900 hover:bg-slate-800 text-white'
+                ? 'bg-slate-800 text-white'
+                : 'bg-slate-900 hover:bg-slate-800 text-white'
                 } `}
             >
               Log In
@@ -652,6 +652,8 @@ const App: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState<RefinedStrategy | null>(null);
   const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
+  // 'google' is default, 'pollinations' is free fallback
+  const [imageProvider, setImageProvider] = useState<'google' | 'pollinations'>('google');
 
   const handleLogin = async () => {
     // Handle API Key selection specifically for Veo/Gemini
@@ -726,6 +728,27 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4">
+
+          {/* Image Provider Toggle */}
+          <div className="hidden md:flex bg-slate-800 rounded-lg p-1 items-center gap-1">
+            <button
+              onClick={() => setImageProvider('google')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${imageProvider === 'google' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              title="Use Google Imagen (Requires API Key)"
+            >
+              Google
+            </button>
+            <button
+              onClick={() => setImageProvider('pollinations')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${imageProvider === 'pollinations' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              title="Use Flux via Pollinations (Free)"
+            >
+              Flux (Free)
+            </button>
+          </div>
+
+          <div className="h-6 w-px bg-slate-700 mx-2"></div>
+
           {/* Stage Indicator */}
           <div className="hidden md:flex bg-slate-800 rounded-full px-4 py-1.5 gap-2 items-center text-xs font-bold uppercase tracking-wider">
             <span className={`${stage === AppStage.BRAINSTORM ? 'text-indigo-400' : 'text-slate-500'} `}>1. Brainstorm</span>
@@ -765,6 +788,7 @@ const App: React.FC = () => {
               strategy={selectedStrategy}
               tools={selectedTools}
               onBack={handleBackToStack}
+              imageProvider={imageProvider} // Pass the provider
             />
           </div>
         )}
