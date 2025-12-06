@@ -1,20 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StrategyOption, ToolOption, ShortConcept } from '../types';
+import { StrategyOption, ToolOption, ShortConcept, SavedProject, RefinedStrategy } from '../types';
 import { generateShortConcept, generateVideoAsset, generateVoiceover, generateImageAsset, generateMoreImagePrompts } from '../services/gemini';
 import {
     Loader2, Play, LayoutTemplate, FileText, Image as ImageIcon,
     RefreshCcw, UploadCloud, Film, Youtube, Globe, Mic, Volume2, Pause, ArrowLeft, Video, SkipBack, SkipForward, Upload, Share2, Link, Plus, Save, Trash2, Palette, Clock, HelpCircle, AlertCircle, Zap, Monitor, RotateCcw,
-    Settings, Wrench, Check
+    Settings, Wrench, Check, X
 } from 'lucide-react';
 import { IntegrationType } from '../types';
 
 interface Props {
     genre: string;
-    strategy: StrategyOption;
+    strategy: RefinedStrategy;
     onBack: () => void;
     onComplete: (concept: ShortConcept, videoUrl: string | null, motionUrls: string[] | null, imageUrl: string | null) => void;
     imageProvider: 'google' | 'pollinations';
     videoProvider: 'veo' | 'flux-motion';
+    initialData?: SavedProject;
 }
 
 interface StyleTemplate {
@@ -38,7 +39,7 @@ const DEFAULT_TEMPLATES: StyleTemplate[] = [
     { id: 'anime', name: 'Anime Style', style: 'Vibrant anime art style, cel-shaded, expressive characters, dynamic action lines, Studio Ghibli inspired landscapes.' }
 ];
 
-export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, onComplete, imageProvider, videoProvider }) => {
+export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, onComplete, imageProvider, videoProvider, initialData }) => {
     // Internal Tools State (formerly from TechStackStage)
     const [tools, setTools] = useState<ToolOption[]>(DEFAULT_TOOLS);
     const [showStackConfig, setShowStackConfig] = useState(false);
@@ -60,6 +61,9 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [newTemplateName, setNewTemplateName] = useState('');
+
+    // Save State
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
     // Guide State
     const [showGuide, setShowGuide] = useState(false);
@@ -105,8 +109,23 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
     useEffect(() => {
         if (!strategy || !genre) return;
 
+        // If loading a draft, populate state
+        if (initialData && !hasAutoTriggered.current) {
+            setTopic(initialData.name.replace('Draft: ', '').replace(`${strategy.title}: `, '')); // Simple cleanup
+            // Or use initialData.name directly if it was edited
+            // Better: use the topic if it was saved in concept
+            if (initialData.concept?.topic) setTopic(initialData.concept.topic);
+
+            setConcept(initialData.concept || null);
+            setVideoUrl(initialData.videoUrl || null);
+            setMotionUrls(initialData.motionUrls || null);
+            setImageUrl(initialData.imageUrl || null);
+            hasAutoTriggered.current = true;
+            return;
+        }
+
         // Construct a strong topic from the inputs if topic is empty
-        if (!topic && !hasAutoTriggered.current) {
+        if (!topic && !hasAutoTriggered.current && !initialData) {
             const autoTopic = `${strategy.title}: ${strategy.searchQuery || genre}`;
             setTopic(autoTopic);
 
@@ -115,7 +134,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             // Use a timeout to ensure state is set before triggering (React state batching)
             setTimeout(() => handleGenerateConcept(autoTopic), 100);
         }
-    }, [strategy, genre]);
+    }, [strategy, genre, initialData]);
 
     // Initialize Web Audio API
     useEffect(() => {
@@ -566,18 +585,64 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
         }
     };
 
+    const handleSaveDraft = () => {
+        if (!strategy) return;
+        setSaveStatus('saving');
+
+        // Construct SavedProject object
+        const savedProject: SavedProject = {
+            id: Date.now().toString(),
+            name: topic || `Draft: ${strategy.title}`,
+            date: Date.now(),
+            genre,
+            strategy,
+            concept: concept || undefined,
+            videoUrl,
+            motionUrls,
+            imageUrl
+        };
+
+        // Save to localStorage
+        try {
+            const existing = localStorage.getItem('trendshorts_history');
+            const history = existing ? JSON.parse(existing) : [];
+            // Remove mostly duplicate if editing recent
+            const updated = [savedProject, ...history.slice(0, 49)]; // Limit to 50
+            localStorage.setItem('trendshorts_history', JSON.stringify(updated));
+
+            setTimeout(() => {
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus('idle'), 2000);
+            }, 800);
+        } catch (e) {
+            console.error("Failed to save draft", e);
+            setSaveStatus('idle');
+            alert("Failed to save draft. Local storage might be full.");
+        }
+    };
+
     return (
         <div className="h-full flex flex-col animate-fadeIn bg-white rounded-xl shadow-xl overflow-hidden border border-slate-200">
             {/* Header */}
-            <div className="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center">
+            <div className="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center shrink-0">
                 <div>
                     <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <LayoutTemplate className="text-indigo-600" />
-                        Content Generation Studio
+                        Content Studio
                     </h1>
-                    <p className="text-xs text-slate-500 font-medium">Strategy: {strategy.title} | Mode: {strategy.automationLevel}</p>
+                    <p className="text-xs text-slate-500 font-medium">Strategy: {strategy.title} | {strategy.automationLevel} Mode</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleSaveDraft}
+                        disabled={saveStatus !== 'idle'}
+                        title="Save Project Draft"
+                        className={`bg-white border border-slate-300 text-slate-700 p-2 rounded-lg transition-all shadow-sm flex items-center gap-2 ${saveStatus === 'saved' ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : 'hover:bg-slate-50'}`}
+                    >
+                        {saveStatus === 'saving' ? <Loader2 size={18} className="animate-spin" /> : saveStatus === 'saved' ? <Check size={18} /> : <Save size={18} />}
+                        <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">{saveStatus === 'saved' ? 'Saved' : 'Save Draft'}</span>
+                    </button>
+
                     <button
                         onClick={handleReset}
                         title="Reset Workspace (New Concept)"
@@ -591,14 +656,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                         className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 p-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
                     >
                         <Settings size={18} />
-                        <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Stack</span>
-                    </button>
-                    <button
-                        onClick={() => setShowGuide(!showGuide)}
-                        className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors"
-                        title="How it works"
-                    >
-                        <HelpCircle size={20} />
+                        <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Settings</span>
                     </button>
                     <button
                         onClick={() => onComplete(concept!, videoUrl, motionUrls, imageUrl)}
@@ -621,7 +679,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                                 <Wrench size={18} className="text-indigo-600" /> AI Stack Configuration
                             </h3>
                             <button onClick={() => setShowStackConfig(false)} className="text-slate-400 hover:text-slate-600">
-                                <RotateCcw className="rotate-45" size={20} /> {/* X icon alternative */}
+                                <X size={20} />
                             </button>
                         </div>
                         <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
@@ -655,507 +713,312 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             )}
 
 
-            <div className="flex-1 bg-slate-50/50 p-6 overflow-y-auto">
+            {/* Split View Container */}
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
-                {showGuide && (
-                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-sm text-slate-700 animate-slideDown max-w-4xl mx-auto mb-6">
-                        <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
-                            <Zap size={16} /> Quick Guide: Content Generation
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                                <span className="font-bold text-indigo-600 block mb-1">1. Auto-Config</span>
-                                Your trend strategy is automatically converted into a video topic.
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                                <span className="font-bold text-indigo-600 block mb-1">2. Draft</span>
-                                We automatically generate a script and visual plan grounded in real sources.
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                                <span className="font-bold text-indigo-600 block mb-1">3. Assets</span>
-                                Generate Voiceover (TTS) and click the video/image icons next to prompts to create visuals.
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                                <span className="font-bold text-indigo-600 block mb-1">4. Publish</span>
-                                Use "Simulate Publish" to test the final workflow step (upload scheduling).
-                            </div>
+                {/* Left Column: Editor & Config (Scrollable) */}
+                <div className="w-full lg:w-5/12 bg-slate-50 p-6 overflow-y-auto border-r border-slate-200 custom-scrollbar">
+
+                    {/* Guide */}
+                    {showGuide && (
+                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-sm text-slate-700 animate-slideDown mb-6">
+                            <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                                <Zap size={16} /> Quick Start
+                            </h4>
+                            <p className="mb-2">1. Enter a topic and click "Regenerate Draft".</p>
+                            <p className="mb-2">2. Review the generated script.</p>
+                            <p>3. Use the right panel to generate visual assets.</p>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Input Section */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
-                    <label className="block text-slate-600 text-xs font-bold uppercase tracking-wider mb-2">
-                        Concept Configuration
-                    </label>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex gap-4 flex-col sm:flex-row">
-                            <div className="flex-1 space-y-1">
+                    {/* Controls Section */}
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
+                        <label className="block text-slate-600 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                            Concept Setup <span className="text-slate-300">|</span> <span className="text-indigo-600">{genre}</span>
+                        </label>
+                        <div className="flex flex-col gap-4">
+                            <div>
                                 <input
                                     type="text"
                                     value={topic}
                                     onChange={(e) => setTopic(e.target.value)}
-                                    placeholder={`Enter a ${genre} topic (e.g., 'Recent breakthrough in...')`}
-                                    title="Enter the specific topic for your YouTube Short"
-                                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                                    placeholder={`Enter a topic (e.g., 'Future of AI')`}
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
                                     onKeyDown={(e) => e.key === 'Enter' && handleGenerateConcept()}
                                 />
                             </div>
 
-                            {/* Style Template Selector */}
-                            <div className="sm:w-1/3 space-y-1">
-                                <div className="relative">
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
                                     <select
                                         value={selectedTemplateId}
                                         onChange={(e) => setSelectedTemplateId(e.target.value)}
-                                        title="Select a visual style template to guide generation"
-                                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-8 py-3 text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none cursor-pointer"
+                                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-8 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none cursor-pointer"
                                     >
                                         <option value="">Auto-Detect Style</option>
                                         {templates.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <Palette size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                    <Palette size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                 </div>
+                                <button
+                                    onClick={() => handleGenerateConcept()}
+                                    disabled={isGenerating || !topic}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 shadow-md transition-all shrink-0"
+                                >
+                                    {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <RefreshCcw size={16} />}
+                                    {isGenerating ? 'Generating...' : 'Generate'}
+                                </button>
                             </div>
                         </div>
-
-                        <button
-                            onClick={() => handleGenerateConcept()}
-                            disabled={isGenerating || !topic}
-                            title="Generate script and concept based on topic and selected style"
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 shadow-md transition-all"
-                        >
-                            {isGenerating ? <Loader2 className="animate-spin" /> : <RefreshCcw size={18} />}
-                            {isGenerating ? 'Generating Draft...' : 'Regenerate Draft'}
-                        </button>
                     </div>
+
+                    {/* Script Area */}
+                    {concept && (
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm animate-fadeIn">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <FileText className="text-emerald-500" size={16} />
+                                    Script & Voice
+                                </h3>
+                                {hasTts && !audioBase64 && !isAudioLoading && (
+                                    <button
+                                        onClick={handleGenerateVoiceover}
+                                        title="Generate AI voiceover"
+                                        className="text-[10px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2 py-1 rounded-md flex items-center gap-1 transition-colors border border-indigo-200 font-bold uppercase tracking-wide"
+                                    >
+                                        <Mic size={12} /> Generate Audio
+                                    </button>
+                                )}
+                                {isAudioLoading && (
+                                    <div className="flex items-center gap-2 text-indigo-600 text-xs font-medium">
+                                        <Loader2 size={14} className="animate-spin" /> Generated...
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-slate-50 p-4 rounded-lg text-slate-700 whitespace-pre-line text-sm leading-relaxed font-mono h-64 overflow-y-auto border border-slate-200 mb-4 shadow-inner">
+                                {concept.script}
+                            </div>
+
+                            {/* Audio Player */}
+                            {audioBase64 && (
+                                <div className="bg-indigo-50/30 rounded-lg border border-indigo-100 p-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-[10px] font-bold text-indigo-400 uppercase flex items-center gap-1">
+                                            <Volume2 size={12} /> Preview
+                                        </h4>
+                                    </div>
+                                </div>
+                            )}
+                            {/* Duration Selector */}
+                            <div className="relative group" title="Target Video Duration">
+                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-1.5 rounded-lg">
+                                    <Clock size={14} className="text-slate-400" />
+                                    <select
+                                        value={videoDuration}
+                                        onChange={(e) => setVideoDuration(e.target.value)}
+                                        className="bg-transparent text-xs text-slate-600 font-medium outline-none cursor-pointer appearance-none pr-1"
+                                    >
+                                        <option value="6s">6s</option>
+                                        <option value="15s">15s</option>
+                                        <option value="30s">30s</option>
+                                        <option value="45s">45s</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={triggerFileUpload}
+                                title="Upload a local video file to preview"
+                                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors border border-slate-200 font-medium"
+                            >
+                                <Upload size={14} /> Upload
+                            </button>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                accept="video/*"
+                                className="hidden"
+                            />
+                        </div>
+                    )}
+                </div>
+                {/* Right Column: Preview Area (Scrollable) */}
+                <div className="w-full lg:w-7/12 bg-slate-100 p-6 overflow-y-auto custom-scrollbar">
+
+                    {/* Main Visual Preview */}
+                    <div className="bg-slate-900 rounded-xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group mb-6">
+                        {/* 1. Video (Veo) */}
+                        {videoUrl && (
+                            <video
+                                src={videoUrl}
+                                className="w-full h-full object-cover"
+                                controls
+                                autoPlay
+                                loop
+                                muted
+                            />
+                        )}
+
+                        {/* 2. Flux Motion (Slideshow) */}
+                        {motionUrls && !videoUrl && (
+                            <div className="w-full h-full relative overflow-hidden">
+                                {motionUrls.map((url, i) => (
+                                    <div
+                                        key={i}
+                                        className="absolute inset-0 w-full h-full bg-cover bg-center animate-ken-burns"
+                                        style={{
+                                            backgroundImage: `url(${url})`,
+                                            animationDelay: `${i * 3}s`,
+                                            opacity: 0
+                                        }}
+                                    />
+                                ))}
+                                {/* Add Inline Styles for Animation directly here for portability */}
+                                <style>{`
+                            @keyframes ken-burns {
+                                0% { opacity: 0; transform: scale(1); }
+                                10% { opacity: 1; }
+                                90% { opacity: 1; }
+                                100% { opacity: 0; transform: scale(1.1); }
+                            }
+                            .animate-ken-burns {
+                                animation: ken-burns 9s infinite;
+                            }
+                        `}</style>
+                                <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                                    Generated with Flux Motion
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. Static Image */}
+                        {imageUrl && !videoUrl && !motionUrls && (
+                            <img src={imageUrl} alt="Generated Asset" className="w-full h-full object-cover" />
+                        )}
+
+                        {/* 4. Loading State */}
+                        {(isVideoLoading || isImageLoading) && (
+                            <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center text-white z-10">
+                                <Loader2 size={48} className="animate-spin mb-4 text-indigo-500" />
+                                <p className="font-bold animate-pulse">
+                                    {isVideoLoading ? (videoProvider === 'veo' ? 'Rendering with Veo...' : 'Creating Motion Sequence...') : 'Generating Image...'}
+                                </p>
+                                {isVideoLoading && videoProvider === 'flux-motion' && <p className="text-xs text-slate-400 mt-2">Generating 3 sequential frames</p>}
+                            </div>
+                        )}
+
+                        {/* 5. Placeholder */}
+                        {!videoUrl && !imageUrl && !motionUrls && !isVideoLoading && !isImageLoading && (
+                            <div className="text-center p-8 opacity-40">
+                                <Film size={48} className="mx-auto mb-4 text-slate-600" />
+                                <h3 className="text-xl font-bold text-slate-500 mb-2">Preview Placeholder</h3>
+                                <p className="text-sm text-slate-600">Select a prompt on the right to generate.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Asset URL Display */}
+                    {(videoUrl || imageUrl) && (
+                        <div className="mb-6 bg-slate-50 p-3 rounded-lg border border-slate-200 overflow-hidden">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Link size={12} className="text-slate-400" />
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Asset URL</label>
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={videoUrl || imageUrl || ''}
+                                    title="Click to select asset URL"
+                                    className="flex-1 bg-white border border-slate-200 text-[10px] text-slate-600 rounded px-2 py-1 font-mono truncate focus:outline-none focus:border-indigo-500"
+                                    onClick={(e) => e.currentTarget.select()}
+                                />
+                                {(videoUrl || imageUrl) && (
+                                    <a
+                                        href={videoUrl || imageUrl || '#'}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        title="Open media in a new tab"
+                                        className="bg-white border border-slate-200 p-1 rounded hover:text-indigo-600 hover:border-indigo-300 transition-colors"
+                                    >
+                                        <Globe size={14} />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Prompts List */}
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-end">
+                            <p className="text-xs font-bold text-slate-400 uppercase">Visual Prompts (Video & Image)</p>
+                            <span className="text-[10px] text-slate-400 italic">Click text to edit</span>
+                        </div>
+                        {concept?.imagePrompts?.map((prompt, idx) => (
+                            <div key={idx} className="group bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs text-slate-700 flex gap-2 items-start transition-all hover:border-indigo-300 hover:shadow-sm relative">
+                                <textarea
+                                    value={prompt}
+                                    onChange={(e) => handlePromptChange(idx, e.target.value)}
+                                    title="Edit prompt for video or image generation"
+                                    className="flex-1 bg-transparent border border-transparent focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 rounded px-2 py-1.5 outline-none resize-y min-h-[6em] transition-all font-medium text-slate-600 focus:text-slate-900 pr-8"
+                                    placeholder="Describe the scene, action, and camera movement..."
+                                />
+                                <div className="flex flex-col gap-1.5 shrink-0 pt-1">
+                                    {hasVeo && (
+                                        <button
+                                            onClick={() => handleGenerateVideo(prompt)}
+                                            className="text-indigo-600 hover:text-indigo-700 bg-white hover:bg-indigo-50 p-2 rounded-md transition-colors shadow-sm border border-slate-200 hover:border-indigo-200"
+                                            title={`Generate ${videoDuration} video with Veo at ${videoResolution}`}
+                                        >
+                                            <Video size={16} />
+                                        </button>
+                                    )}
+                                    {hasImagen && (
+                                        <button
+                                            onClick={() => handleGenerateImage(prompt)}
+                                            className="text-purple-600 hover:text-purple-700 bg-white hover:bg-purple-50 p-2 rounded-md transition-colors shadow-sm border border-slate-200 hover:border-purple-200"
+                                            title="Generate static image with Imagen 3"
+                                        >
+                                            <ImageIcon size={16} />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleDeletePrompt(idx)}
+                                        className="text-slate-400 hover:text-red-600 bg-transparent hover:bg-red-50 p-2 rounded-md transition-colors"
+                                        title="Delete this prompt"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleAddManualPrompt}
+                                title="Add a new blank prompt manually"
+                                className="flex-1 bg-white hover:bg-slate-50 text-slate-600 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-slate-200 transition-colors border-dashed"
+                            >
+                                <Plus size={14} /> Add Manual Prompt
+                            </button>
+                            <button
+                                onClick={handleMorePrompts}
+                                disabled={isMorePromptsLoading}
+                                title="Generate 3 additional image prompts using AI"
+                                className="flex-[2] bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-slate-200 transition-colors"
+                            >
+                                {isMorePromptsLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
+                                Generate 3 More AI Prompts
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
 
-                {/* Results Area */}
-                {concept && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Script & Audio */}
-                        <div className="space-y-6">
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                        <FileText className="text-emerald-500" size={20} />
-                                        Generated Script
-                                    </h3>
-                                    {hasTts && !audioBase64 && !isAudioLoading && (
-                                        <button
-                                            onClick={handleGenerateVoiceover}
-                                            title="Generate AI voiceover using Gemini TTS"
-                                            className="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors border border-indigo-200 font-medium"
-                                        >
-                                            <Mic size={14} /> Generate Audio
-                                        </button>
-                                    )}
-                                    {isAudioLoading && (
-                                        <div className="flex items-center gap-2 text-indigo-600 text-xs font-medium">
-                                            <Loader2 size={16} className="animate-spin" /> Generating Voice...
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="bg-slate-50 p-5 rounded-lg text-slate-700 whitespace-pre-line text-sm leading-relaxed font-mono h-48 overflow-y-auto border border-slate-200 mb-6">
-                                    {concept.script}
-                                </div>
-
-                                {/* Audio Player */}
-                                {audioBase64 && (
-                                    <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h4 className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
-                                                <Volume2 size={14} /> Audio Preview
-                                            </h4>
-                                            <span className="text-xs font-mono text-slate-500">
-                                                {formatTime(currentTime)} / {formatTime(duration)}
-                                            </span>
-                                        </div>
-
-                                        {/* Visualizer */}
-                                        <canvas
-                                            ref={canvasRef}
-                                            width={300}
-                                            height={40}
-                                            className="w-full h-12 rounded bg-white border border-slate-200 mb-3"
-                                        />
-
-                                        {/* Controls */}
-                                        <div className="flex items-center gap-4">
-                                            <button
-                                                onClick={isPlaying ? pauseAudio : playAudio}
-                                                title={isPlaying ? "Pause" : "Play"}
-                                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm ${isPlaying
-                                                    ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-                                                    : 'bg-indigo-600 text-white hover:bg-indigo-500'
-                                                    }`}
-                                            >
-                                                {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
-                                            </button>
-
-                                            <div className="flex-1 flex flex-col gap-1">
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max={duration || 100}
-                                                    value={currentTime}
-                                                    onChange={handleSeek}
-                                                    title="Seek"
-                                                    step="0.1"
-                                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                                />
-                                            </div>
-
-                                            <div className="flex items-center gap-2 w-24">
-                                                <Volume2 size={16} className="text-slate-400" />
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="1"
-                                                    step="0.01"
-                                                    value={volume}
-                                                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                                                    title="Volume"
-                                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {concept.sources && concept.sources.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-slate-100">
-                                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1">
-                                            <Globe size={12} /> Sources (Grounding)
-                                        </h4>
-                                        <ul className="space-y-1">
-                                            {concept.sources.slice(0, 3).map((source, i) => (
-                                                <li key={i} className="text-xs text-indigo-600 truncate hover:text-indigo-800">
-                                                    <a href={source} target="_blank" rel="noopener noreferrer" title="Open source in new tab">{source}</a>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                        <UploadCloud className="text-blue-500" size={20} />
-                                        Publishing Meta
-                                    </h3>
-                                    {isSavingTemplate ? (
-                                        <div className="flex gap-2 animate-fadeIn">
-                                            <input
-                                                type="text"
-                                                placeholder="Template Name"
-                                                value={newTemplateName}
-                                                onChange={(e) => setNewTemplateName(e.target.value)}
-                                                className="text-xs border border-slate-300 rounded px-2 py-1 outline-none focus:border-indigo-500 w-32"
-                                                autoFocus
-                                            />
-                                            <button onClick={handleSaveTemplate} title="Confirm Save" className="text-xs bg-indigo-600 text-white px-2 py-1 rounded font-bold">Save</button>
-                                            <button onClick={() => setIsSavingTemplate(false)} title="Cancel" className="text-xs text-slate-500 hover:text-slate-800 px-1">Cancel</button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => setIsSavingTemplate(true)}
-                                            title="Save this visual style as a reusable template"
-                                            className="text-xs bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 hover:border-indigo-200 px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors"
-                                        >
-                                            <Save size={14} /> Save Style
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                        <label className="text-xs text-slate-400 font-bold uppercase block mb-1">Title</label>
-                                        <p className="text-slate-900 font-medium">{concept.topic} #Shorts</p>
-                                    </div>
-                                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 relative group/style">
-                                        <label className="text-xs text-slate-400 font-bold uppercase block mb-1 flex justify-between">
-                                            Visual Style
-                                            <span className="text-[10px] font-normal text-slate-400 italic">Editable</span>
-                                        </label>
-                                        <textarea
-                                            value={concept.visualStyle}
-                                            onChange={(e) => handleVisualStyleChange(e.target.value)}
-                                            title="Edit visual style description"
-                                            className="w-full bg-transparent border-none p-0 text-slate-700 text-sm focus:ring-0 outline-none resize-none h-24"
-                                        />
-                                    </div>
-
-                                    {/* Saved Templates List Management */}
-                                    {templates.filter(t => !DEFAULT_TEMPLATES.some(dt => dt.id === t.id)).length > 0 && (
-                                        <div className="mt-4 pt-4 border-t border-slate-100">
-                                            <label className="text-xs text-slate-400 font-bold uppercase block mb-2">My Saved Templates</label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {templates.filter(t => !DEFAULT_TEMPLATES.some(dt => dt.id === t.id)).map(t => (
-                                                    <div key={t.id} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200 flex items-center gap-2">
-                                                        <span
-                                                            className="cursor-pointer hover:text-indigo-600 truncate max-w-[100px]"
-                                                            title={t.style}
-                                                            onClick={() => {
-                                                                setSelectedTemplateId(t.id);
-                                                                handleVisualStyleChange(t.style);
-                                                            }}
-                                                        >
-                                                            {t.name}
-                                                        </span>
-                                                        <button onClick={(e) => handleDeleteTemplate(t.id, e)} title="Delete Template" className="hover:text-red-500">
-                                                            <Trash2 size={12} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Visuals */}
-                        <div className="space-y-6">
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                        <ImageIcon className="text-purple-500" size={20} />
-                                        Visual Assets
-                                    </h3>
-                                    <div className="flex items-center gap-2">
-                                        {/* Resolution Selector */}
-                                        <div className="relative group" title="Target Video Resolution">
-                                            <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-1.5 rounded-lg">
-                                                <Monitor size={14} className="text-slate-400" />
-                                                <select
-                                                    value={videoResolution}
-                                                    onChange={(e) => setVideoResolution(e.target.value as '720p' | '1080p')}
-                                                    className="bg-transparent text-xs text-slate-600 font-medium outline-none cursor-pointer appearance-none pr-1"
-                                                >
-                                                    <option value="1080p">1080p</option>
-                                                    <option value="720p">720p</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        {/* Duration Selector */}
-                                        <div className="relative group" title="Target Video Duration">
-                                            <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-1.5 rounded-lg">
-                                                <Clock size={14} className="text-slate-400" />
-                                                <select
-                                                    value={videoDuration}
-                                                    onChange={(e) => setVideoDuration(e.target.value)}
-                                                    className="bg-transparent text-xs text-slate-600 font-medium outline-none cursor-pointer appearance-none pr-1"
-                                                >
-                                                    <option value="6s">6s</option>
-                                                    <option value="15s">15s</option>
-                                                    <option value="30s">30s</option>
-                                                    <option value="45s">45s</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            onClick={triggerFileUpload}
-                                            title="Upload a local video file to preview"
-                                            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors border border-slate-200 font-medium"
-                                        >
-                                            <Upload size={14} /> Upload
-                                        </button>
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleFileUpload}
-                                            accept="video/*"
-                                            className="hidden"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Main Visual Preview */}
-                                <div className="bg-slate-900 rounded-xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group">
-
-                                    {/* 1. Video (Veo) */}
-                                    {videoUrl && (
-                                        <video
-                                            src={videoUrl}
-                                            className="w-full h-full object-cover"
-                                            controls
-                                            autoPlay
-                                            loop
-                                            muted
-                                        />
-                                    )}
-
-                                    {/* 2. Flux Motion (Slideshow) */}
-                                    {motionUrls && !videoUrl && (
-                                        <div className="w-full h-full relative overflow-hidden">
-                                            {motionUrls.map((url, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="absolute inset-0 w-full h-full bg-cover bg-center animate-ken-burns"
-                                                    style={{
-                                                        backgroundImage: `url(${url})`,
-                                                        animationDelay: `${i * 3}s`,
-                                                        opacity: 0
-                                                    }}
-                                                />
-                                            ))}
-                                            {/* Add Inline Styles for Animation directly here for portability */}
-                                            <style>{`
-                        @keyframes ken-burns {
-                            0% { opacity: 0; transform: scale(1); }
-                            10% { opacity: 1; }
-                            90% { opacity: 1; }
-                            100% { opacity: 0; transform: scale(1.1); }
-                        }
-                        .animate-ken-burns {
-                            animation: ken-burns 9s infinite;
-                        }
-                    `}</style>
-                                            <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-                                                Generated with Flux Motion
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* 3. Static Image */}
-                                    {imageUrl && !videoUrl && !motionUrls && (
-                                        <img src={imageUrl} alt="Generated Asset" className="w-full h-full object-cover" />
-                                    )}
-
-                                    {/* 4. Loading State */}
-                                    {(isVideoLoading || isImageLoading) && (
-                                        <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center text-white z-10">
-                                            <Loader2 size={48} className="animate-spin mb-4 text-indigo-500" />
-                                            <p className="font-bold animate-pulse">
-                                                {isVideoLoading ? (videoProvider === 'veo' ? 'Rendering with Veo...' : 'Creating Motion Sequence...') : 'Generating Image...'}
-                                            </p>
-                                            {isVideoLoading && videoProvider === 'flux-motion' && <p className="text-xs text-slate-400 mt-2">Generating 3 sequential frames</p>}
-                                        </div>
-                                    )}
-
-                                    {/* 5. Placeholder */}
-                                    {!videoUrl && !imageUrl && !motionUrls && !isVideoLoading && !isImageLoading && (
-                                        <div className="text-center p-8 opacity-40">
-                                            <Film size={48} className="mx-auto mb-4 text-slate-600" />
-                                            <h3 className="text-xl font-bold text-slate-500 mb-2">Preview Placeholder</h3>
-                                            <p className="text-sm text-slate-600">Select a prompt on the right to generate.</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Asset URL Display */}
-                                {(videoUrl || imageUrl) && (
-                                    <div className="mb-6 bg-slate-50 p-3 rounded-lg border border-slate-200 overflow-hidden">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Link size={12} className="text-slate-400" />
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase">Asset URL</label>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={videoUrl || imageUrl || ''}
-                                                title="Click to select asset URL"
-                                                className="flex-1 bg-white border border-slate-200 text-[10px] text-slate-600 rounded px-2 py-1 font-mono truncate focus:outline-none focus:border-indigo-500"
-                                                onClick={(e) => e.currentTarget.select()}
-                                            />
-                                            {(videoUrl || imageUrl) && (
-                                                <a
-                                                    href={videoUrl || imageUrl || '#'}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    title="Open media in a new tab"
-                                                    className="bg-white border border-slate-200 p-1 rounded hover:text-indigo-600 hover:border-indigo-300 transition-colors"
-                                                >
-                                                    <Globe size={14} />
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Prompts List */}
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-end">
-                                        <p className="text-xs font-bold text-slate-400 uppercase">Visual Prompts (Video & Image)</p>
-                                        <span className="text-[10px] text-slate-400 italic">Click text to edit</span>
-                                    </div>
-                                    {concept.imagePrompts.map((prompt, idx) => (
-                                        <div key={idx} className="group bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs text-slate-700 flex gap-2 items-start transition-all hover:border-indigo-300 hover:shadow-sm relative">
-                                            <textarea
-                                                value={prompt}
-                                                onChange={(e) => handlePromptChange(idx, e.target.value)}
-                                                title="Edit prompt for video or image generation"
-                                                className="flex-1 bg-transparent border border-transparent focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 rounded px-2 py-1.5 outline-none resize-y min-h-[6em] transition-all font-medium text-slate-600 focus:text-slate-900 pr-8"
-                                                placeholder="Describe the scene, action, and camera movement..."
-                                            />
-                                            <div className="flex flex-col gap-1.5 shrink-0 pt-1">
-                                                {hasVeo && (
-                                                    <button
-                                                        onClick={() => handleGenerateVideo(prompt)}
-                                                        className="text-indigo-600 hover:text-indigo-700 bg-white hover:bg-indigo-50 p-2 rounded-md transition-colors shadow-sm border border-slate-200 hover:border-indigo-200"
-                                                        title={`Generate ${videoDuration} video with Veo at ${videoResolution}`}
-                                                    >
-                                                        <Video size={16} />
-                                                    </button>
-                                                )}
-                                                {hasImagen && (
-                                                    <button
-                                                        onClick={() => handleGenerateImage(prompt)}
-                                                        className="text-purple-600 hover:text-purple-700 bg-white hover:bg-purple-50 p-2 rounded-md transition-colors shadow-sm border border-slate-200 hover:border-purple-200"
-                                                        title="Generate static image with Imagen 3"
-                                                    >
-                                                        <ImageIcon size={16} />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => handleDeletePrompt(idx)}
-                                                    className="text-slate-400 hover:text-red-600 bg-transparent hover:bg-red-50 p-2 rounded-md transition-colors"
-                                                    title="Delete this prompt"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleAddManualPrompt}
-                                            title="Add a new blank prompt manually"
-                                            className="flex-1 bg-white hover:bg-slate-50 text-slate-600 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-slate-200 transition-colors border-dashed"
-                                        >
-                                            <Plus size={14} /> Add Manual Prompt
-                                        </button>
-                                        <button
-                                            onClick={handleMorePrompts}
-                                            disabled={isMorePromptsLoading}
-                                            title="Generate 3 additional image prompts using AI"
-                                            className="flex-[2] bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-slate-200 transition-colors"
-                                        >
-                                            {isMorePromptsLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
-                                            Generate 3 More AI Prompts
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                )}
-
-                {!concept && !isGenerating && (
-                    <div className="text-center py-20 opacity-40">
-                        <LayoutTemplate size={64} className="mx-auto mb-4 text-slate-400" />
-                        <p className="text-slate-500 text-lg">Initializing Content Generation Workflow...</p>
-                    </div>
-                )}
             </div>
-        </div >
+        </div>
     );
 };

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { BrainstormStage } from './components/BrainstormStage';
 import { PrototypeDashboard } from './components/PrototypeDashboard';
 import { PublishStage } from './components/PublishStage';
-import './index.css';
-import { AppStage, StrategyOption, ToolOption, RefinedStrategy, ShortConcept } from './types';
+import { ProjectHistoryModal } from './components/ProjectHistoryModal';
+import { AppStage, StrategyOption, ToolOption, RefinedStrategy, ShortConcept, SavedProject } from './types';
 import { getAiClient } from './services/gemini';
-import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle } from 'lucide-react';
+import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle, AlertCircle } from 'lucide-react';
 
 // --- Components for Landing Page Sections ---
 
@@ -652,6 +652,7 @@ const App: React.FC = () => {
   // Application State
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState<RefinedStrategy | null>(null);
+  const [loadedProject, setLoadedProject] = useState<SavedProject | null>(null);
 
   // Results State
   const [generatedConcept, setGeneratedConcept] = useState<ShortConcept | null>(null);
@@ -740,7 +741,10 @@ const App: React.FC = () => {
   const handleBackToBrainstorm = () => {
     setStage(AppStage.BRAINSTORM);
     setSelectedStrategy(null);
+    setStage(AppStage.BRAINSTORM);
+    setSelectedStrategy(null);
     setGeneratedConcept(null);
+    setLoadedProject(null);
   };
 
   const handleBackToStudio = () => {
@@ -753,10 +757,40 @@ const App: React.FC = () => {
     // Reset state
     setSelectedStrategy(null);
     setSelectedGenre('');
+    setSelectedGenre('');
     setGeneratedConcept(null);
+    setLoadedProject(null);
     setFinalVideoUrl(null);
     setFinalMotionUrls(null);
     setFinalImageUrl(null);
+  };
+
+  // History Modal State
+  const [showHistory, setShowHistory] = useState(false);
+
+  const handleLoadProject = (project: SavedProject) => {
+    setSelectedGenre(project.genre);
+    setSelectedStrategy(project.strategy);
+    setLoadedProject(project); // Set the loaded project data
+
+    // Always go to Studio to allow editing/viewing state
+    setStage(AppStage.CONTENT_GENERATION);
+
+    // If it was fully complete, user can click Publish from Studio
+    // Optional: could pre-fill generatedConcept if we want to skip generation,
+    // but passing loadedProject to PrototypeDashboard handles that.
+
+    setShowHistory(false);
+  };
+
+  const handleLogoClick = () => {
+    if (isLoggedIn) {
+      setStage(AppStage.BRAINSTORM);
+      setStage(AppStage.BRAINSTORM);
+      setSelectedStrategy(null);
+      setGeneratedConcept(null);
+      setLoadedProject(null);
+    }
   };
 
   if (!isLoggedIn) {
@@ -768,7 +802,11 @@ const App: React.FC = () => {
     <div className="h-screen bg-slate-100 flex flex-col font-sans text-slate-900 overflow-hidden">
       {/* App Header */}
       <header className="bg-slate-900 text-white h-16 shrink-0 flex items-center justify-between px-6 shadow-md z-20">
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={handleLogoClick}
+          title="Return to Brainstorming"
+        >
           <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
             <Zap size={18} fill="currentColor" className="text-white" />
           </div>
@@ -777,18 +815,29 @@ const App: React.FC = () => {
 
         <div className="flex items-center gap-4">
 
+          <button
+            onClick={() => setShowHistory(true)}
+            className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+            title="My Projects"
+          >
+            <Layers size={18} />
+            <span className="text-sm font-medium">My Projects</span>
+          </button>
+
+          <div className="h-4 w-px bg-slate-700 hidden md:block"></div>
+
           {/* Image Provider Toggle */}
           <div className="hidden md:flex bg-slate-800 rounded-lg p-1 items-center gap-1">
             <button
               onClick={() => setImageProvider('google')}
-              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${imageProvider === 'google' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${imageProvider === 'google' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
               title="Use Google Imagen (Requires API Key)"
             >
               Google
             </button>
             <button
               onClick={() => setImageProvider('pollinations')}
-              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${imageProvider === 'pollinations' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${imageProvider === 'pollinations' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
               title="Use Flux via Pollinations (Free)"
             >
               Flux (Free)
@@ -799,44 +848,80 @@ const App: React.FC = () => {
           <div className="hidden md:flex bg-slate-800 rounded-lg p-1 items-center gap-1">
             <button
               onClick={() => setVideoProvider('veo')}
-              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${videoProvider === 'veo' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
-              title="Use Google Veo (Requires Paid API Key)"
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${videoProvider === 'veo' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              title="Use Google Veo (Requires API Key)"
             >
               Veo
             </button>
             <button
               onClick={() => setVideoProvider('flux-motion')}
-              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${videoProvider === 'flux-motion' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
-              title="Use Flux Motion (Free Slideshow)"
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${videoProvider === 'flux-motion' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              title="Use Flux Motion (Free)"
             >
               Motion (Free)
             </button>
           </div>
 
-          <div className="h-6 w-px bg-slate-700 mx-2"></div>
+          <div className="h-4 w-px bg-slate-700 hidden md:block"></div>
 
-          {/* Stage Indicator */}
-          <div className="hidden md:flex bg-slate-800 rounded-full px-4 py-1.5 gap-2 items-center text-xs font-bold uppercase tracking-wider">
-            <span className={`${stage === AppStage.BRAINSTORM ? 'text-indigo-400' : 'text-slate-500'} `}>1. Brainstorm</span>
-            <span className="text-slate-600">/</span>
-            <span className={`${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-400' : 'text-slate-500'} `}>2. Studio</span>
-            <span className="text-slate-600">/</span>
-            <span className={`${stage === AppStage.PUBLISH ? 'text-indigo-400' : 'text-slate-500'} `}>3. Publish</span>
+          {/* User Profile / API Key Status */}
+          <div className="flex items-center gap-3">
+            {hasApiKey ? (
+              <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium bg-emerald-400/10 px-2 py-1 rounded-full border border-emerald-400/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                API Connected
+              </div>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-1 text-amber-400 text-xs font-medium bg-amber-400/10 px-2 py-1 rounded-full border border-amber-400/20 hover:bg-amber-400/20 transition-colors"
+              >
+                <AlertCircle size={10} />
+                Connect API
+              </button>
+            )}
+
+            <button
+              onClick={handleLogout}
+              className="text-slate-400 hover:text-white transition-colors"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
-
-          <div className="h-6 w-px bg-slate-700"></div>
-
-          <button
-            onClick={handleLogout}
-            className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"
-          >
-            <LogOut size={16} /> Exit
-          </button>
         </div>
       </header>
 
+      {/* Stage Indicator */}
+      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center justify-center shadow-sm z-10">
+        <div className="flex items-center gap-2 md:gap-8 text-sm">
+          <div className={`flex items-center gap-2 ${stage === AppStage.BRAINSTORM ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.BRAINSTORM ? 'bg-indigo-100' : 'bg-slate-100'}`}>1</div>
+            <span>Brainstorm</span>
+          </div>
+          <div className="w-8 h-px bg-slate-200"></div>
+          <div className={`flex items-center gap-2 ${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.CONTENT_GENERATION ? 'bg-indigo-100' : 'bg-slate-100'}`}>2</div>
+            <span>Studio</span>
+          </div>
+          <div className="w-8 h-px bg-slate-200"></div>
+          <div className={`flex items-center gap-2 ${stage === AppStage.PUBLISH ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.PUBLISH ? 'bg-indigo-100' : 'bg-slate-100'}`}>3</div>
+            <span>Publish</span>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden relative">
+        {!hasApiKey && stage !== AppStage.PUBLISH && (
+          <div className="absolute top-0 left-0 w-full bg-amber-50 text-amber-800 px-4 py-2 text-xs text-center border-b border-amber-100 z-10 flex items-center justify-center gap-2">
+            <AlertCircle size={12} />
+            <span>Using Demo Mode. Connect Google AI Studio API key for full functionality.</span>
+            <button onClick={handleLogin} className="underline font-bold hover:text-amber-900">Connect Now</button>
+          </div>
+        )}
+
         {stage === AppStage.BRAINSTORM && (
           <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
             <BrainstormStage
@@ -856,6 +941,7 @@ const App: React.FC = () => {
               onComplete={handleStudioComplete}
               imageProvider={imageProvider}
               videoProvider={videoProvider}
+              initialData={loadedProject || undefined}
             />
           </div>
         )}
@@ -873,6 +959,12 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      <ProjectHistoryModal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onLoad={handleLoadProject}
+      />
     </div>
   );
 };

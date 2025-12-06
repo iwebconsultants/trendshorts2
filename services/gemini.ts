@@ -2,7 +2,7 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { StrategyOption, ShortConcept, ChatMessage } from "../types";
 
 // Initialize the client
-const getAiClient = () => {
+export const getAiClient = () => {
     // Check if API key is present in environment (injected by the runtime)
     // We access process.env.API_KEY directly so it can be replaced by the bundler/vite
     const apiKey = process.env.API_KEY;

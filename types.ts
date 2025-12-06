@@ -25,12 +25,25 @@ export interface StrategyOption {
 // Enhanced strategy with refinement data for passing to next phase
 export interface RefinedStrategy extends StrategyOption {
   selectedKeywords: string[];
+  targetAudience?: string; // Target audience description
   trendAnalysis?: {
     topTrends?: string[];
     alternateKeywords?: string[];
     userRefinements?: string;
   };
   refinementNotes?: string; // Chat history or user notes
+}
+
+export interface SavedProject {
+  id: string;
+  name: string;
+  date: number; // timestamp
+  genre: string;
+  strategy: RefinedStrategy;
+  concept?: ShortConcept;
+  videoUrl?: string | null;
+  motionUrls?: string[] | null;
+  imageUrl?: string | null;
 }
 
 export interface ChatMessage {
