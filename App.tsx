@@ -2,14 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrainstormStage } from './components/BrainstormStage';
 import { TechStackStage } from './components/TechStackStage';
 import { PrototypeDashboard } from './components/PrototypeDashboard';
-import { AppStage, StrategyOption, ToolOption, AIStudio } from './types';
+import { AppStage, StrategyOption, ToolOption } from './types';
 import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle } from 'lucide-react';
-
-declare global {
-  interface Window {
-    aistudio?: AIStudio;
-  }
-}
 
 // --- Components for Landing Page Sections ---
 
@@ -661,18 +655,19 @@ const App: React.FC = () => {
 
     const handleLogin = async () => {
         // Handle API Key selection specifically for Veo/Gemini
-        if (window.aistudio) {
+        const win = window as any;
+        if (win.aistudio) {
             try {
-                const hasKey = await window.aistudio.hasSelectedApiKey();
+                const hasKey = await win.aistudio.hasSelectedApiKey();
                 if (!hasKey) {
-                    await window.aistudio.openSelectKey();
+                    await win.aistudio.openSelectKey();
                 }
             } catch (e: any) {
                 console.error("API Key selection error", e);
                 // Retry logic if entity not found (race condition or bad state)
                 if (e.message && e.message.includes("Requested entity was not found")) {
                      try {
-                        await window.aistudio.openSelectKey();
+                        await win.aistudio.openSelectKey();
                      } catch (retryError) {
                          console.error("Retry failed", retryError);
                          alert("Please select a valid API key project to continue.");

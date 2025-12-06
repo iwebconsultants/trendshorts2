@@ -4,10 +4,8 @@ import { StrategyOption, ShortConcept, ChatMessage } from "../types";
 // Initialize the client
 const getAiClient = () => {
     // Check if API key is present in environment (injected by the runtime)
-    // Or check localStorage for manually entered key in deployed version
-    // Safe check for process to avoid ReferenceError in browser
-    const envKey = (typeof process !== "undefined" && process.env) ? process.env.API_KEY : undefined;
-    const apiKey = envKey || localStorage.getItem('gemini_api_key');
+    // We access process.env.API_KEY directly so it can be replaced by the bundler/vite
+    const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
         throw new Error("API Key not found. Please select a key.");
@@ -315,8 +313,7 @@ export const generateVideoAsset = async (prompt: string, duration?: string, reso
     if (!uri) throw new Error("Failed to generate video URI");
     
     // Append API key for download access as per guidelines
-    const envKey = (typeof process !== "undefined" && process.env) ? process.env.API_KEY : undefined;
-    const apiKey = envKey || localStorage.getItem('gemini_api_key');
+    const apiKey = process.env.API_KEY || '';
     return `${uri}&key=${apiKey}`;
 };
 
