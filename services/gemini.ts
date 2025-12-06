@@ -364,7 +364,7 @@ export const generateImageAsset = async (prompt: string): Promise<string> => {
     const ai = getAiClient();
 
     const response = await ai.models.generateImages({
-        model: 'imagen-3.0-generate-001',
+        model: 'imagen-3.0-generate-002',  // Updated to correct model name
         prompt: prompt,
         config: {
             numberOfImages: 1,
