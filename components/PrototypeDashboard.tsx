@@ -3,14 +3,16 @@ import { StrategyOption, ToolOption, ShortConcept } from '../types';
 import { generateShortConcept, generateVideoAsset, generateVoiceover, generateImageAsset, generateMoreImagePrompts } from '../services/gemini';
 import {
     Loader2, Play, LayoutTemplate, FileText, Image as ImageIcon,
-    RefreshCcw, UploadCloud, Film, Youtube, Globe, Mic, Volume2, Pause, ArrowLeft, Video, SkipBack, SkipForward, Upload, Share2, Link, Plus, Save, Trash2, Palette, Clock, HelpCircle, AlertCircle, Zap, Monitor, RotateCcw
+    RefreshCcw, UploadCloud, Film, Youtube, Globe, Mic, Volume2, Pause, ArrowLeft, Video, SkipBack, SkipForward, Upload, Share2, Link, Plus, Save, Trash2, Palette, Clock, HelpCircle, AlertCircle, Zap, Monitor, RotateCcw,
+    Settings, Wrench, Check
 } from 'lucide-react';
+import { IntegrationType } from '../types';
 
 interface Props {
     genre: string;
     strategy: StrategyOption;
-    tools: ToolOption[];
     onBack: () => void;
+    onComplete: (concept: ShortConcept, videoUrl: string | null, motionUrls: string[] | null, imageUrl: string | null) => void;
     imageProvider: 'google' | 'pollinations';
     videoProvider: 'veo' | 'flux-motion';
 }
@@ -21,6 +23,14 @@ interface StyleTemplate {
     style: string;
 }
 
+const DEFAULT_TOOLS: ToolOption[] = [
+    { id: 'gemini-flash', name: 'Gemini 2.5', type: IntegrationType.CONTENT, description: 'Script Gen', required: true, selected: true },
+    { id: 'google-trends', name: 'Google Trends', type: IntegrationType.CONTENT, description: 'Grounding', required: true, selected: true },
+    { id: 'veo', name: 'Veo Video', type: IntegrationType.VIDEO, description: 'High-end Video', required: false, selected: true },
+    { id: 'imagen', name: 'Imagen 3', type: IntegrationType.VIDEO, description: 'Static Images', required: false, selected: true },
+    { id: 'tts-gemini', name: 'Gemini TTS', type: IntegrationType.VOICE, description: 'Voiceover', required: false, selected: true }
+];
+
 const DEFAULT_TEMPLATES: StyleTemplate[] = [
     { id: 'cinematic', name: 'Cinematic Documentary', style: 'High-contrast, 35mm film look, dramatic lighting, photorealistic, 4k, moody atmosphere.' },
     { id: 'minimal', name: 'Minimalist Tech', style: 'Clean white background, soft shadows, isometric 3D elements, pastel accent colors, modern UI graphics.' },
@@ -28,7 +38,11 @@ const DEFAULT_TEMPLATES: StyleTemplate[] = [
     { id: 'anime', name: 'Anime Style', style: 'Vibrant anime art style, cel-shaded, expressive characters, dynamic action lines, Studio Ghibli inspired landscapes.' }
 ];
 
-export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, onBack, imageProvider, videoProvider }) => {
+export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, onComplete, imageProvider, videoProvider }) => {
+    // Internal Tools State (formerly from TechStackStage)
+    const [tools, setTools] = useState<ToolOption[]>(DEFAULT_TOOLS);
+    const [showStackConfig, setShowStackConfig] = useState(false);
+
     const [topic, setTopic] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [concept, setConcept] = useState<ShortConcept | null>(null);
@@ -572,6 +586,14 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
                         <RotateCcw size={18} />
                     </button>
                     <button
+                        onClick={() => setShowStackConfig(true)}
+                        title="Configure AI Stack"
+                        className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 p-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                    >
+                        <Settings size={18} />
+                        <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Stack</span>
+                    </button>
+                    <button
                         onClick={() => setShowGuide(!showGuide)}
                         className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors"
                         title="How it works"
@@ -579,14 +601,59 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
                         <HelpCircle size={20} />
                     </button>
                     <button
-                        onClick={onBack}
-                        title="Go back to Tech Stack configuration"
-                        className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                        onClick={() => onComplete(concept!, videoUrl, motionUrls, imageUrl)}
+                        disabled={!concept}
+                        title="Proceed to Publish"
+                        className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all shadow-md ${concept ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            }`}
                     >
-                        <ArrowLeft size={16} /> Back to Stack
+                        Publish <ArrowLeft className="rotate-180" size={16} />
                     </button>
                 </div>
             </div>
+
+            {/* Stack Config Modal */}
+            {showStackConfig && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+                        <div className="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                <Wrench size={18} className="text-indigo-600" /> AI Stack Configuration
+                            </h3>
+                            <button onClick={() => setShowStackConfig(false)} className="text-slate-400 hover:text-slate-600">
+                                <RotateCcw className="rotate-45" size={20} /> {/* X icon alternative */}
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
+                            {tools.map(tool => (
+                                <div
+                                    key={tool.id}
+                                    onClick={() => !tool.required && setTools(prev => prev.map(t => t.id === tool.id ? { ...t, selected: !t.selected } : t))}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${tool.selected ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200 opacity-60'
+                                        }`}
+                                >
+                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${tool.selected ? 'bg-indigo-600 text-white' : 'bg-slate-200'}`}>
+                                        {tool.selected && <Check size={14} />}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between">
+                                            <span className="font-bold text-sm text-slate-900">{tool.name}</span>
+                                            {tool.required && <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 rounded">Required</span>}
+                                        </div>
+                                        <p className="text-xs text-slate-500">{tool.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                            <button onClick={() => setShowStackConfig(false)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <div className="flex-1 bg-slate-50/50 p-6 overflow-y-auto">
 
@@ -1078,23 +1145,6 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
                                 </div>
                             </div>
 
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={handleShare}
-                                    title="Share concept summary via native share or clipboard"
-                                    className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-4 rounded-xl shadow-sm flex justify-center items-center gap-2 transition-all hover:scale-[1.02]"
-                                >
-                                    <Share2 size={20} />
-                                    Share
-                                </button>
-                                <button
-                                    onClick={handleSimulatePublish}
-                                    title="Simulate the publishing workflow"
-                                    className="flex-[2] bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-200 flex justify-center items-center gap-2 transition-transform hover:scale-[1.02]">
-                                    <Youtube size={24} />
-                                    Simulate Publish
-                                </button>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -1106,6 +1156,6 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };

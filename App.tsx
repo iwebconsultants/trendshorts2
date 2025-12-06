@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrainstormStage } from './components/BrainstormStage';
-import { TechStackStage } from './components/TechStackStage';
 import { PrototypeDashboard } from './components/PrototypeDashboard';
+import { PublishStage } from './components/PublishStage';
 import './index.css';
-import { AppStage, StrategyOption, ToolOption, RefinedStrategy } from './types';
+import { AppStage, StrategyOption, ToolOption, RefinedStrategy, ShortConcept } from './types';
+import { getAiClient } from './services/gemini';
 import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle } from 'lucide-react';
 
 // --- Components for Landing Page Sections ---
@@ -651,19 +652,51 @@ const App: React.FC = () => {
   // Application State
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState<RefinedStrategy | null>(null);
-  const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
+
+  // Results State
+  const [generatedConcept, setGeneratedConcept] = useState<ShortConcept | null>(null);
+  const [finalVideoUrl, setFinalVideoUrl] = useState<string | null>(null);
+  const [finalMotionUrls, setFinalMotionUrls] = useState<string[] | null>(null);
+  const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
+
   // Provider states
   const [imageProvider, setImageProvider] = useState<'google' | 'pollinations'>('google');
   const [videoProvider, setVideoProvider] = useState<'veo' | 'flux-motion'>('veo');
+
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  useEffect(() => {
+    const checkApiKey = async () => {
+      const win = window as any;
+      if (win.aistudio) {
+        try {
+          const keyExists = await win.aistudio.hasSelectedApiKey();
+          setHasApiKey(keyExists);
+        } catch (e) {
+          console.error("Error checking API key:", e);
+          setHasApiKey(false);
+        }
+      }
+    };
+    checkApiKey();
+  }, []);
 
   const handleLogin = async () => {
     // Handle API Key selection specifically for Veo/Gemini
     const win = window as any;
     if (win.aistudio) {
       try {
-        const hasKey = await win.aistudio.hasSelectedApiKey();
-        if (!hasKey) {
+        const keyExists = await win.aistudio.hasSelectedApiKey();
+        if (!keyExists) {
           await win.aistudio.openSelectKey();
+          const updatedKeyExists = await win.aistudio.hasSelectedApiKey();
+          setHasApiKey(updatedKeyExists);
+          if (!updatedKeyExists) {
+            alert("Please select a valid API key project to continue.");
+            return;
+          }
+        } else {
+          setHasApiKey(keyExists);
         }
       } catch (e: any) {
         console.error("API Key selection error", e);
@@ -671,6 +704,12 @@ const App: React.FC = () => {
         if (e.message && e.message.includes("Requested entity was not found")) {
           try {
             await win.aistudio.openSelectKey();
+            const updatedKeyExists = await win.aistudio.hasSelectedApiKey();
+            setHasApiKey(updatedKeyExists);
+            if (!updatedKeyExists) {
+              alert("Please select a valid API key project to continue.");
+              return;
+            }
           } catch (retryError) {
             console.error("Retry failed", retryError);
             alert("Please select a valid API key project to continue.");
@@ -686,21 +725,26 @@ const App: React.FC = () => {
   const handleBrainstormComplete = (genre: string, strategy: RefinedStrategy) => {
     setSelectedGenre(genre);
     setSelectedStrategy(strategy);
-    setStage(AppStage.TECH_STACK);
+    // Skip Tech Stack, go straight to Content Gen
+    setStage(AppStage.CONTENT_GENERATION);
   };
 
-  const handleStackComplete = (tools: ToolOption[]) => {
-    setSelectedTools(tools);
-    setStage(AppStage.CONTENT_GENERATION);
+  const handleStudioComplete = (concept: ShortConcept, videoUrl: string | null, motionUrls: string[] | null, imageUrl: string | null) => {
+    setGeneratedConcept(concept);
+    setFinalVideoUrl(videoUrl);
+    setFinalMotionUrls(motionUrls);
+    setFinalImageUrl(imageUrl);
+    setStage(AppStage.PUBLISH);
   };
 
   const handleBackToBrainstorm = () => {
     setStage(AppStage.BRAINSTORM);
     setSelectedStrategy(null);
+    setGeneratedConcept(null);
   };
 
-  const handleBackToStack = () => {
-    setStage(AppStage.TECH_STACK);
+  const handleBackToStudio = () => {
+    setStage(AppStage.CONTENT_GENERATION);
   };
 
   const handleLogout = () => {
@@ -708,8 +752,11 @@ const App: React.FC = () => {
     setStage(AppStage.BRAINSTORM);
     // Reset state
     setSelectedStrategy(null);
-    setSelectedTools([]);
     setSelectedGenre('');
+    setGeneratedConcept(null);
+    setFinalVideoUrl(null);
+    setFinalMotionUrls(null);
+    setFinalImageUrl(null);
   };
 
   if (!isLoggedIn) {
@@ -734,14 +781,14 @@ const App: React.FC = () => {
           <div className="hidden md:flex bg-slate-800 rounded-lg p-1 items-center gap-1">
             <button
               onClick={() => setImageProvider('google')}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${imageProvider === 'google' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${imageProvider === 'google' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
               title="Use Google Imagen (Requires API Key)"
             >
               Google
             </button>
             <button
               onClick={() => setImageProvider('pollinations')}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${imageProvider === 'pollinations' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${imageProvider === 'pollinations' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
               title="Use Flux via Pollinations (Free)"
             >
               Flux (Free)
@@ -752,14 +799,14 @@ const App: React.FC = () => {
           <div className="hidden md:flex bg-slate-800 rounded-lg p-1 items-center gap-1">
             <button
               onClick={() => setVideoProvider('veo')}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${videoProvider === 'veo' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${videoProvider === 'veo' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
               title="Use Google Veo (Requires Paid API Key)"
             >
               Veo
             </button>
             <button
               onClick={() => setVideoProvider('flux-motion')}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${videoProvider === 'flux-motion' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px - 3 py - 1 rounded - md text - xs font - bold transition - all ${videoProvider === 'flux-motion' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'} `}
               title="Use Flux Motion (Free Slideshow)"
             >
               Motion (Free)
@@ -772,9 +819,9 @@ const App: React.FC = () => {
           <div className="hidden md:flex bg-slate-800 rounded-full px-4 py-1.5 gap-2 items-center text-xs font-bold uppercase tracking-wider">
             <span className={`${stage === AppStage.BRAINSTORM ? 'text-indigo-400' : 'text-slate-500'} `}>1. Brainstorm</span>
             <span className="text-slate-600">/</span>
-            <span className={`${stage === AppStage.TECH_STACK ? 'text-indigo-400' : 'text-slate-500'} `}>2. Stack</span>
+            <span className={`${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-400' : 'text-slate-500'} `}>2. Studio</span>
             <span className="text-slate-600">/</span>
-            <span className={`${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-400' : 'text-slate-500'} `}>3. Create</span>
+            <span className={`${stage === AppStage.PUBLISH ? 'text-indigo-400' : 'text-slate-500'} `}>3. Publish</span>
           </div>
 
           <div className="h-6 w-px bg-slate-700"></div>
@@ -791,24 +838,37 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden relative">
         {stage === AppStage.BRAINSTORM && (
-          <BrainstormStage onComplete={handleBrainstormComplete} />
-        )}
-
-        {stage === AppStage.TECH_STACK && (
-          <div className="h-full p-4 md:p-8 max-w-5xl mx-auto">
-            <TechStackStage onNext={handleStackComplete} onBack={handleBackToBrainstorm} />
+          <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
+            <BrainstormStage
+              onNext={handleBrainstormComplete}
+              onLoginRequest={handleLogin}
+              hasApiKey={hasApiKey}
+            />
           </div>
         )}
 
         {stage === AppStage.CONTENT_GENERATION && selectedStrategy && (
-          <div className="h-full p-4 md:p-6">
+          <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
             <PrototypeDashboard
               genre={selectedGenre}
               strategy={selectedStrategy}
-              tools={selectedTools}
-              onBack={handleBackToStack}
-              imageProvider={imageProvider} // Pass the provider
-              videoProvider={videoProvider} // Pass the video provider
+              onBack={handleBackToStudio}
+              onComplete={handleStudioComplete}
+              imageProvider={imageProvider}
+              videoProvider={videoProvider}
+            />
+          </div>
+        )}
+
+        {stage === AppStage.PUBLISH && (
+          <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
+            <PublishStage
+              concept={generatedConcept}
+              videoUrl={finalVideoUrl}
+              motionUrls={finalMotionUrls}
+              imageUrl={finalImageUrl}
+              onBack={handleBackToStudio}
+              onRestart={() => setStage(AppStage.BRAINSTORM)}
             />
           </div>
         )}

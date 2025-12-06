@@ -5,7 +5,9 @@ import { getTopTrends, generateAlternateKeywords, TrendData } from '../services/
 import { Loader2, Zap, TrendingUp, Filter, Clock, X, RotateCcw, Globe, Plus, MapPin, Tag, ChevronDown, ChevronUp, Edit2, Send, MessageSquare, ExternalLink, Sparkles, Lightbulb, Flame, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 interface Props {
-    onComplete: (genre: string, strategy: RefinedStrategy) => void;
+    onNext: (genre: string, strategy: RefinedStrategy) => void;
+    onLoginRequest: () => void;
+    hasApiKey: boolean;
 }
 
 const COUNTRIES = [
@@ -18,19 +20,14 @@ const COUNTRIES = [
     { code: 'AE', name: 'UAE', lat: 23, lon: 53 },
     { code: 'SA', name: 'Saudi Arabia', lat: 23, lon: 45 },
     { code: 'DE', name: 'Germany', lat: 51, lon: 10 },
-    { code: 'FR', name: 'France', lat: 46, lon: 2 },
-    { code: 'BR', name: 'Brazil', lat: -14, lon: -51 },
-    { code: 'ID', name: 'Indonesia', lat: -0.7, lon: 113 },
-    { code: 'NG', name: 'Nigeria', lat: 9, lon: 8 },
-    { code: 'TR', name: 'Turkey', lat: 38, lon: 35 },
-    { code: 'JP', name: 'Japan', lat: 36, lon: 138 },
-    { code: 'KR', name: 'South Korea', lat: 35, lon: 127 },
+    { code: 'br', name: 'Brazil', lat: -14, lon: -51 },
+    { code: 'mx', name: 'Mexico', lat: 23, lon: -102 },
+    { code: 'fr', name: 'France', lat: 46, lon: 2 },
+    { code: 'jp', name: 'Japan', lat: 36, lon: 138 },
 ];
 
 const CATEGORIES = [
-    'Entertainment', 'Education', 'Tech', 'Finance', 'Health', 'History',
-    'News', 'Gaming', 'DIY', 'Travel', 'Motivation', 'True Crime',
-    'Food/Cooking', 'ASMR', 'Comedy', 'Business', 'Life Hacks', 'Crypto'
+    'Technology', 'Health', 'finance', 'Entertainment', 'Education', 'Travel', 'Food', 'Gaming'
 ];
 
 interface RecentSearch {
@@ -39,21 +36,26 @@ interface RecentSearch {
     categories: string[];
 }
 
-export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
+export const BrainstormStage: React.FC<Props> = ({ onNext, onLoginRequest, hasApiKey }) => {
     // Input State
-    const [selectedLocations, setSelectedLocations] = useState<string[]>(['US']);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>(['Entertainment']);
+    const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
+    const [selectedLocations, setSelectedLocations] = useState<string[]>(['United States']);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<string[]>([]);
     const [keywordInput, setKeywordInput] = useState('');
 
-    // App State
+    // UI State
+    const [topics, setTopics] = useState<string[]>([]);
+    const [manualTopic, setManualTopic] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [strategies, setStrategies] = useState<StrategyOption[]>([]);
-    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [showAdvanced, setShowAdvanced] = useState(false);
     const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
 
     // Chat State
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const [chatInputs, setChatInputs] = useState<{ [key: number]: string }>({});
     const [chatHistories, setChatHistories] = useState<{ [key: number]: ChatMessage[] }>({});
     const [chatLoading, setChatLoading] = useState<{ [key: number]: boolean }>({});
@@ -652,7 +654,7 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
                                                         },
                                                         refinementNotes: chatHistories[idx]?.map(m => `${m.role}: ${m.text}`).join('\n') || ''
                                                     };
-                                                    onComplete(keywords.join(' '), refinedStrategy);
+                                                    onNext(keywords.join(' '), refinedStrategy);
                                                 }}
                                                 className="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
                                             >
