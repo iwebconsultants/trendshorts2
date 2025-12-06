@@ -74,6 +74,30 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
         }
     }, []);
 
+    // Load top trends on mount
+    useEffect(() => {
+        const loadTopTrends = async () => {
+            const trends = await getTopTrends();
+            setTopTrends(trends);
+        };
+        loadTopTrends();
+    }, []);
+
+    // Generate alternate keywords when keywords change
+    useEffect(() => {
+        const loadAlternates = async () => {
+            if (keywords.length > 0) {
+                setLoadingAlternates(true);
+                const alternates = await generateAlternateKeywords(keywords);
+                setAlternateKeywords(alternates);
+                setLoadingAlternates(false);
+            } else {
+                setAlternateKeywords([]);
+            }
+        };
+        loadAlternates();
+    }, [keywords]);
+
     const saveSearch = () => {
         const newSearch = { keywords, locations: selectedLocations, categories: selectedCategories };
         const updated = [newSearch, ...recentSearches.slice(0, 4)];
@@ -104,6 +128,18 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
     const handleTopTrends = () => {
         const trendingKeywords = ["Viral", "Challenge", "POV", "Life Hacks", "Satisfying", "Facts"];
         setKeywords(trendingKeywords);
+    };
+
+    const handleAddTrendKeyword = (keyword: string) => {
+        if (!keywords.includes(keyword)) {
+            setKeywords([...keywords, keyword]);
+        }
+    };
+
+    const handleAddAlternateKeyword = (keyword: string) => {
+        if (!keywords.includes(keyword)) {
+            setKeywords([...keywords, keyword]);
+        }
     };
 
     const toggleLocation = (code: string) => {
@@ -329,6 +365,35 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
                                 <Plus size={18} />
                             </button>
                         </div>
+
+                        {/* Alternate Keywords Suggestions */}
+                        {alternateKeywords.length > 0 && (
+                            <div className="mt-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Sparkles size={12} className="text-indigo-600" />
+                                    <label className="text-[10px] font-bold text-indigo-600 uppercase">
+                                        AI Suggestions
+                                    </label>
+                                    {loadingAlternates && <Loader2 size={10} className="animate-spin text-indigo-400" />}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {alternateKeywords.map((kw, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleAddAlternateKeyword(kw)}
+                                            disabled={keywords.includes(kw)}
+                                            className={`text-xs px-2 py-1 rounded-md border transition-all ${keywords.includes(kw)
+                                                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                                : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'
+                                                }`}
+                                        >
+                                            <Plus size={10} className="inline mr-1" />
+                                            {kw}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* 2. Locations Row */}
@@ -393,6 +458,57 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
 
             {/* --- RESULTS AREA (HORIZONTAL LAYOUT) --- */}
             <div className="flex-1 bg-white p-4 md:p-8">
+
+                {/* Top Trends Right Now */}
+                {!hasSearched && topTrends.length > 0 && (
+                    <div className="mb-8">
+                        <div className="bg-gradient-to-r from-orange-50 via-red-50 to-pink-50 border border-orange-200 rounded-2xl p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Flame size={18} className="text-orange-500" />
+                                    <h3 className="text-lg font-bold text-slate-900">Top Trends Right Now</h3>
+                                </div>
+                                <span className="text-xs text-slate-500 font-mono">Live • Updated hourly</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                {topTrends.slice(0, 10).map((trend, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleAddTrendKeyword(trend.keyword)}
+                                        disabled={keywords.includes(trend.keyword)}
+                                        className={`group relative bg-white rounded-xl p-3 border-2 transition-all hover:shadow-md ${keywords.includes(trend.keyword)
+                                                ? 'border-gray-200 opacity-50 cursor-not-allowed'
+                                                : 'border-transparent hover:border-orange-300 cursor-pointer'
+                                            }`}
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <span className="text-xs font-mono font-bold text-orange-600">#{idx + 1}</span>
+                                            {trend.trending === 'up' && <ArrowUp size={12} className="text-emerald-500" />}
+                                            {trend.trending === 'down' && <ArrowDown size={12} className="text-red-500" />}
+                                            {trend.trending === 'stable' && <Minus size={12} className="text-slate-400" />}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-sm font-bold text-slate-900 mb-1 line-clamp-1">{trend.keyword}</p>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded">
+                                                    {trend.category}
+                                                </span>
+                                                <span className="text-xs font-bold text-indigo-600">{trend.score}</span>
+                                            </div>
+                                        </div>
+                                        {!keywords.includes(trend.keyword) && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-indigo-600/90 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-1 text-white text-xs font-bold">
+                                                    <Plus size={12} /> Add
+                                                </div>
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Recent Searches */}
                 {recentSearches.length > 0 && !hasSearched && (
