@@ -6,7 +6,7 @@ const getAiClient = () => {
     // Check if API key is present in environment (injected by the runtime)
     // We access process.env.API_KEY directly so it can be replaced by the bundler/vite
     const apiKey = process.env.API_KEY;
-    
+
     if (!apiKey) {
         throw new Error("API Key not found. Please select a key.");
     }
@@ -18,7 +18,7 @@ const cleanAndParseJson = <T>(text: string | undefined): T => {
     if (!text) throw new Error("No text response from AI");
 
     let cleanText = text;
-    
+
     // Remove markdown code blocks if present
     if (cleanText.includes("```")) {
         cleanText = cleanText.replace(/```json/g, '').replace(/```/g, '');
@@ -27,7 +27,7 @@ const cleanAndParseJson = <T>(text: string | undefined): T => {
     // Attempt to find the JSON structure
     const firstBrace = cleanText.indexOf('{');
     const firstBracket = cleanText.indexOf('[');
-    
+
     // Determine if we are looking for an object or an array
     let startIndex = -1;
     let endIndex = -1;
@@ -46,11 +46,27 @@ const cleanAndParseJson = <T>(text: string | undefined): T => {
         cleanText = cleanText.substring(startIndex, endIndex + 1);
     }
 
+    // --- FIX COMMON JSON MALFORMATIONS ---
+
+    // Fix 1: Replace missing array/object values after colons (e.g., "dataPoints":, -> "dataPoints":[],)
+    cleanText = cleanText.replace(/:\s*,/g, ': [],');
+
+    // Fix 2: Replace missing values before closing braces/brackets (e.g., "field":} -> "field":null})
+    cleanText = cleanText.replace(/:\s*([}\]])/g, ': null$1');
+
+    // Fix 3: Remove trailing commas before closing braces/brackets
+    cleanText = cleanText.replace(/,(\s*[}\]])/g, '$1');
+
+    // Fix 4: Replace empty array definitions that might have been over-corrected
+    cleanText = cleanText.replace(/:\s*\[\]\s*\[\]/g, ': []');
+
     try {
         return JSON.parse(cleanText) as T;
     } catch (e) {
-        console.error("Failed to parse JSON:", text, e);
-        throw new Error("AI response was not valid JSON.");
+        console.error("Failed to parse JSON after cleaning. Original text:", text);
+        console.error("Cleaned text:", cleanText);
+        console.error("Parse error:", e);
+        throw new Error("AI response was not valid JSON even after cleaning attempts.");
     }
 };
 
@@ -60,14 +76,14 @@ const cleanAndParseJson = <T>(text: string | undefined): T => {
  * Uses Google Search Grounding to ensure recommendations are based on real statistics and trends.
  */
 export const brainstormStrategies = async (keywords: string[], locations: string[], categories: string[]): Promise<StrategyOption[]> => {
-  const ai = getAiClient();
-  
-  // Format inputs for the prompt
-  const locationStr = locations.length > 0 ? locations.join(", ") : "Global";
-  const categoryStr = categories.length > 0 ? categories.join(", ") : "General";
-  const keywordStr = keywords.join(", ");
+    const ai = getAiClient();
 
-  const prompt = `
+    // Format inputs for the prompt
+    const locationStr = locations.length > 0 ? locations.join(", ") : "Global";
+    const categoryStr = categories.length > 0 ? categories.join(", ") : "General";
+    const keywordStr = keywords.join(", ");
+
+    const prompt = `
     You are a Strategic Content Architect for Short-form Video (YouTube Shorts, TikTok).
     
     INPUT SIGNALS:
@@ -110,27 +126,50 @@ export const brainstormStrategies = async (keywords: string[], locations: string
     "trendMetrics.dataPoints" must be 12 numbers (0-100) simulating the last 12 months trend.
   `;
 
-  try {
-      // Attempt with Google Search Grounding
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }], 
-        }
-      });
-      return cleanAndParseJson<StrategyOption[]>(response.text);
+    // Helper to validate and fix strategy objects
+    const validateStrategy = (strategy: any): StrategyOption => {
+        return {
+            title: strategy.title || "Untitled Strategy",
+            description: strategy.description || "No description provided",
+            pros: Array.isArray(strategy.pros) ? strategy.pros : ["Innovative approach"],
+            cons: Array.isArray(strategy.cons) ? strategy.cons : ["Requires planning"],
+            estimatedCost: strategy.estimatedCost || "$0 - $50/mo",
+            automationLevel: strategy.automationLevel || "Medium",
+            trendMetrics: {
+                score: strategy.trendMetrics?.score || 75,
+                dataPoints: Array.isArray(strategy.trendMetrics?.dataPoints) && strategy.trendMetrics.dataPoints.length === 12
+                    ? strategy.trendMetrics.dataPoints
+                    : [30, 40, 50, 55, 60, 65, 70, 75, 80, 82, 85, 90], // Default trending upward
+                searchVolume: strategy.trendMetrics?.searchVolume || "Medium"
+            },
+            searchQuery: strategy.searchQuery || "",
+            trendingReason: strategy.trendingReason || "Emerging trend with growth potential"
+        };
+    };
 
-  } catch (error) {
-      console.warn("Google Search Grounding failed, falling back to standard generation.", error);
-      
-      // Fallback without tools
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt + "\n\n(Note: Perform analysis using your internal knowledge base as search is unavailable.)",
-      });
-      return cleanAndParseJson<StrategyOption[]>(response.text);
-  }
+    try {
+        // Attempt with Google Search Grounding
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            }
+        });
+        const strategies = cleanAndParseJson<StrategyOption[]>(response.text);
+        return strategies.map(validateStrategy);
+
+    } catch (error) {
+        console.warn("Google Search Grounding failed, falling back to standard generation.", error);
+
+        // Fallback without tools
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt + "\n\n(Note: Perform analysis using your internal knowledge base as search is unavailable.)",
+        });
+        const strategies = cleanAndParseJson<StrategyOption[]>(response.text);
+        return strategies.map(validateStrategy);
+    }
 };
 
 /**
@@ -140,7 +179,7 @@ export const brainstormStrategies = async (keywords: string[], locations: string
  */
 export const chatAboutStrategy = async (strategy: StrategyOption, history: ChatMessage[], newMessage: string): Promise<string> => {
     const ai = getAiClient();
-    
+
     const systemInstruction = `
         You are an expert Content Strategist assisting a user in refining a specific YouTube Shorts/TikTok idea.
         
@@ -192,7 +231,7 @@ export const chatAboutStrategy = async (strategy: StrategyOption, history: ChatM
  */
 export const generateShortConcept = async (topic: string, genre: string, strategy: string, stylePreset?: string): Promise<ShortConcept> => {
     const ai = getAiClient();
-    
+
     const contentPrompt = `
         Generate a YouTube Short concept for the genre/keywords "${genre}" using the strategy "${strategy}".
         The specific topic is: "${topic}".
@@ -224,12 +263,12 @@ export const generateShortConcept = async (topic: string, genre: string, strateg
         });
 
         const concept = cleanAndParseJson<ShortConcept>(response.text);
-        
+
         // Extract sources if available
         const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
         const sources = groundingChunks?.map(chunk => chunk.web?.uri).filter(Boolean) as string[] || [];
         concept.sources = sources;
-        
+
         return concept;
 
     } catch (error) {
@@ -252,10 +291,10 @@ export const generateShortConcept = async (topic: string, genre: string, strateg
  * Generates additional image prompts based on the existing concept.
  */
 export const generateMoreImagePrompts = async (topic: string, script: string, visualStyle: string): Promise<string[]> => {
-  const ai = getAiClient();
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `
       Based on the following YouTube Short concept:
       Topic: "${topic}"
       Visual Style: "${visualStyle}"
@@ -264,21 +303,21 @@ export const generateMoreImagePrompts = async (topic: string, script: string, vi
       Generate 3 MORE distinct, high-quality image generation prompts that would serve as background visuals for different segments of this video.
       Output ONLY a JSON array of strings. Example: ["prompt 1", "prompt 2", "prompt 3"]
     `,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: { type: Type.STRING }
-      }
-    }
-  });
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+            }
+        }
+    });
 
-  try {
-    return cleanAndParseJson<string[]>(response.text);
-  } catch (e) {
-    console.error("Failed to parse JSON", e);
-    return [];
-  }
+    try {
+        return cleanAndParseJson<string[]>(response.text);
+    } catch (e) {
+        console.error("Failed to parse JSON", e);
+        return [];
+    }
 };
 
 /**
@@ -288,7 +327,7 @@ export const generateMoreImagePrompts = async (topic: string, script: string, vi
  */
 export const generateVideoAsset = async (prompt: string, duration?: string, resolution: '720p' | '1080p' = '1080p'): Promise<string> => {
     const ai = getAiClient();
-    
+
     // Append duration to the prompt if provided.
     const finalPrompt = duration ? `${prompt}. Target duration: ${duration}.` : prompt;
 
@@ -311,7 +350,7 @@ export const generateVideoAsset = async (prompt: string, duration?: string, reso
 
     const uri = operation.response?.generatedVideos?.[0]?.video?.uri;
     if (!uri) throw new Error("Failed to generate video URI");
-    
+
     // Append API key for download access as per guidelines
     const apiKey = process.env.API_KEY || '';
     return `${uri}&key=${apiKey}`;
@@ -364,6 +403,6 @@ export const generateVoiceover = async (text: string): Promise<string> => {
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) throw new Error("No audio data returned");
-    
+
     return base64Audio;
 };
