@@ -12,6 +12,7 @@ interface Props {
     tools: ToolOption[];
     onBack: () => void;
     imageProvider: 'google' | 'pollinations';
+    videoProvider: 'veo' | 'flux-motion';
 }
 
 interface StyleTemplate {
@@ -27,11 +28,12 @@ const DEFAULT_TEMPLATES: StyleTemplate[] = [
     { id: 'anime', name: 'Anime Style', style: 'Vibrant anime art style, cel-shaded, expressive characters, dynamic action lines, Studio Ghibli inspired landscapes.' }
 ];
 
-export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, onBack, imageProvider }) => {
+export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, onBack, imageProvider, videoProvider }) => {
     const [topic, setTopic] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [concept, setConcept] = useState<ShortConcept | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [motionUrls, setMotionUrls] = useState<string[] | null>(null); // For Flux Motion Slideshow
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isVideoLoading, setIsVideoLoading] = useState(false);
     const [isImageLoading, setIsImageLoading] = useState(false);
@@ -339,6 +341,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
             setTopic('');
             setConcept(null);
             setVideoUrl(null);
+            setMotionUrls(null);
             setImageUrl(null);
             setAudioBase64(null);
             pauseAudio();
@@ -353,6 +356,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
         setIsGenerating(true);
         setConcept(null);
         setVideoUrl(null);
+        setMotionUrls(null);
         setImageUrl(null);
         setAudioBase64(null);
         pauseAudio(); // Stop any audio
@@ -372,18 +376,30 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
     };
 
     const handleGenerateVideo = async (prompt: string) => {
-        if (!hasVeo) {
-            alert("Veo is not enabled in your tech stack.");
+        // Check constraint only if using Veo
+        if (videoProvider === 'veo' && !hasVeo) {
+            alert("Veo is not enabled. Switch to 'Motion (Free)' or enable Veo.");
             return;
         }
+
         setIsVideoLoading(true);
         setImageUrl(null);
+        setVideoUrl(null);
+        setMotionUrls(null);
+
         try {
-            const uri = await generateVideoAsset(prompt, videoDuration, videoResolution);
-            setVideoUrl(uri);
+            if (videoProvider === 'flux-motion') {
+                // Free Flux Motion (Slideshow)
+                const urls = await import('../services/gemini').then(m => m.generateFluxMotionAssets(prompt));
+                setMotionUrls(urls);
+            } else {
+                // Paid Veo
+                const uri = await generateVideoAsset(prompt, videoDuration, videoResolution);
+                setVideoUrl(uri);
+            }
         } catch (e) {
             console.error(e);
-            alert("Failed to generate video. Note: Veo requires a paid, allowlisted project ID.");
+            alert("Failed to generate video asset.");
         } finally {
             setIsVideoLoading(false);
         }
@@ -707,8 +723,8 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
                                                 onClick={isPlaying ? pauseAudio : playAudio}
                                                 title={isPlaying ? "Pause" : "Play"}
                                                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm ${isPlaying
-                                                        ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-                                                        : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                                                    ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+                                                    : 'bg-indigo-600 text-white hover:bg-indigo-500'
                                                     }`}
                                             >
                                                 {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
@@ -893,36 +909,75 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, tools, on
                                     </div>
                                 </div>
 
-                                {/* Preview Area */}
-                                <div className="aspect-[9/16] bg-slate-900 rounded-lg mb-6 flex items-center justify-center relative overflow-hidden group border border-slate-300 max-w-[240px] mx-auto shadow-md">
-                                    {isVideoLoading || isImageLoading ? (
-                                        <div className="text-center">
-                                            <Loader2 className="animate-spin text-indigo-400 mx-auto mb-2" size={32} />
-                                            <p className="text-xs text-slate-400">
-                                                {isVideoLoading ? 'Rendering with Veo...' : 'Generating with Imagen...'}
-                                            </p>
-                                        </div>
-                                    ) : videoUrl ? (
+                                {/* Main Visual Preview */}
+                                <div className="bg-slate-900 rounded-xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group">
+
+                                    {/* 1. Video (Veo) */}
+                                    {videoUrl && (
                                         <video
-                                            key={videoUrl}
                                             src={videoUrl}
+                                            className="w-full h-full object-cover"
                                             controls
                                             autoPlay
                                             loop
                                             muted
-                                            playsInline
-                                            className="w-full h-full object-cover"
                                         />
-                                    ) : imageUrl ? (
-                                        <img
-                                            src={imageUrl}
-                                            alt="Generated Asset"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="text-center p-4">
-                                            <Film className="text-slate-600 mx-auto mb-2" size={32} />
-                                            <p className="text-xs text-slate-500">Preview Placeholder</p>
+                                    )}
+
+                                    {/* 2. Flux Motion (Slideshow) */}
+                                    {motionUrls && !videoUrl && (
+                                        <div className="w-full h-full relative overflow-hidden">
+                                            {motionUrls.map((url, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="absolute inset-0 w-full h-full bg-cover bg-center animate-ken-burns"
+                                                    style={{
+                                                        backgroundImage: `url(${url})`,
+                                                        animationDelay: `${i * 3}s`,
+                                                        opacity: 0
+                                                    }}
+                                                />
+                                            ))}
+                                            {/* Add Inline Styles for Animation directly here for portability */}
+                                            <style>{`
+                        @keyframes ken-burns {
+                            0% { opacity: 0; transform: scale(1); }
+                            10% { opacity: 1; }
+                            90% { opacity: 1; }
+                            100% { opacity: 0; transform: scale(1.1); }
+                        }
+                        .animate-ken-burns {
+                            animation: ken-burns 9s infinite;
+                        }
+                    `}</style>
+                                            <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                                                Generated with Flux Motion
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 3. Static Image */}
+                                    {imageUrl && !videoUrl && !motionUrls && (
+                                        <img src={imageUrl} alt="Generated Asset" className="w-full h-full object-cover" />
+                                    )}
+
+                                    {/* 4. Loading State */}
+                                    {(isVideoLoading || isImageLoading) && (
+                                        <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center text-white z-10">
+                                            <Loader2 size={48} className="animate-spin mb-4 text-indigo-500" />
+                                            <p className="font-bold animate-pulse">
+                                                {isVideoLoading ? (videoProvider === 'veo' ? 'Rendering with Veo...' : 'Creating Motion Sequence...') : 'Generating Image...'}
+                                            </p>
+                                            {isVideoLoading && videoProvider === 'flux-motion' && <p className="text-xs text-slate-400 mt-2">Generating 3 sequential frames</p>}
+                                        </div>
+                                    )}
+
+                                    {/* 5. Placeholder */}
+                                    {!videoUrl && !imageUrl && !motionUrls && !isVideoLoading && !isImageLoading && (
+                                        <div className="text-center p-8 opacity-40">
+                                            <Film size={48} className="mx-auto mb-4 text-slate-600" />
+                                            <h3 className="text-xl font-bold text-slate-500 mb-2">Preview Placeholder</h3>
+                                            <p className="text-sm text-slate-600">Select a prompt on the right to generate.</p>
                                         </div>
                                     )}
                                 </div>

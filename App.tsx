@@ -652,8 +652,9 @@ const App: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState<RefinedStrategy | null>(null);
   const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
-  // 'google' is default, 'pollinations' is free fallback
+  // Provider states
   const [imageProvider, setImageProvider] = useState<'google' | 'pollinations'>('google');
+  const [videoProvider, setVideoProvider] = useState<'veo' | 'flux-motion'>('veo');
 
   const handleLogin = async () => {
     // Handle API Key selection specifically for Veo/Gemini
@@ -747,6 +748,24 @@ const App: React.FC = () => {
             </button>
           </div>
 
+          {/* Video Provider Toggle */}
+          <div className="hidden md:flex bg-slate-800 rounded-lg p-1 items-center gap-1">
+            <button
+              onClick={() => setVideoProvider('veo')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${videoProvider === 'veo' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              title="Use Google Veo (Requires Paid API Key)"
+            >
+              Veo
+            </button>
+            <button
+              onClick={() => setVideoProvider('flux-motion')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${videoProvider === 'flux-motion' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              title="Use Flux Motion (Free Slideshow)"
+            >
+              Motion (Free)
+            </button>
+          </div>
+
           <div className="h-6 w-px bg-slate-700 mx-2"></div>
 
           {/* Stage Indicator */}
@@ -789,6 +808,7 @@ const App: React.FC = () => {
               tools={selectedTools}
               onBack={handleBackToStack}
               imageProvider={imageProvider} // Pass the provider
+              videoProvider={videoProvider} // Pass the video provider
             />
           </div>
         )}

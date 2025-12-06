@@ -384,6 +384,35 @@ export const generateVideoAsset = async (prompt: string, duration?: string, reso
 };
 
 /**
+ * generateFluxMotionAssets
+ * Generates regular Flux images but intended for a slideshow/motion sequence.
+ * Returns an array of URLs for the frontend to animate.
+ */
+export const generateFluxMotionAssets = async (prompt: string): Promise<string[]> => {
+    // We create 3 variations for a "Cinematic Sequence"
+    // 1. Wide Shot (Context)
+    // 2. Medium Shot (Action)
+    // 3. Close Up (Detail)
+
+    // Base seed
+    const baseSeed = Math.floor(Math.random() * 1000000);
+
+    const shots = [
+        { type: 'Wide angle establishing shot', seedOffset: 0 },
+        { type: 'Medium shot, dynamic action', seedOffset: 1 },
+        { type: 'Extreme close up, detailed texture', seedOffset: 2 }
+    ];
+
+    const urls = shots.map(shot => {
+        const enhancedPrompt = encodeURIComponent(`${shot.type}, ${prompt}`);
+        const seed = baseSeed + shot.seedOffset;
+        return `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=720&height=1280&model=flux&seed=${seed}&nologo=true`;
+    });
+
+    return urls;
+};
+
+/**
  * generateImageAsset
  * Uses Imagen to generate a static image background for the concept.
  * Supports fallback to Pollinations.ai (Flux) if Google API fails.
