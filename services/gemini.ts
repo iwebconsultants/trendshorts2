@@ -328,32 +328,42 @@ export const generateMoreImagePrompts = async (topic: string, script: string, vi
 export const generateVideoAsset = async (prompt: string, duration?: string, resolution: '720p' | '1080p' = '1080p'): Promise<string> => {
     const ai = getAiClient();
 
-    // Append duration to the prompt if provided.
-    const finalPrompt = duration ? `${prompt}. Target duration: ${duration}.` : prompt;
+    try {
+        // Append duration to the prompt if provided.
+        const finalPrompt = duration ? `${prompt}. Target duration: ${duration}.` : prompt;
 
-    // Using fast-generate for quicker feedback in a prototype
-    let operation = await ai.models.generateVideos({
-        model: 'veo-3.1-fast-generate-preview',
-        prompt: finalPrompt,
-        config: {
-            numberOfVideos: 1,
-            resolution: resolution, // Can be 720p or 1080p.
-            aspectRatio: '9:16'
+        // Using fast-generate for quicker feedback in a prototype
+        let operation = await ai.models.generateVideos({
+            model: 'veo-3.1-fast-generate-preview',
+            prompt: finalPrompt,
+            config: {
+                numberOfVideos: 1,
+                resolution: resolution, // Can be 720p or 1080p.
+                aspectRatio: '9:16'
+            }
+        });
+
+        // Polling mechanism (10s recommended for Veo)
+        while (!operation.done) {
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            operation = await ai.operations.getVideosOperation({ operation: operation });
         }
-    });
 
-    // Polling mechanism (10s recommended for Veo)
-    while (!operation.done) {
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        operation = await ai.operations.getVideosOperation({ operation: operation });
+        const uri = operation.response?.generatedVideos?.[0]?.video?.uri;
+        if (!uri) throw new Error("Failed to generate video URI");
+
+        // Append API key for download access as per guidelines
+        const apiKey = process.env.API_KEY || '';
+        return `${uri}&key=${apiKey}`;
+    } catch (error: any) {
+        // Handle quota/rate limit errors with helpful message
+        if (error?.message?.includes('quota') || error?.message?.includes('429') || error?.status === 'RESOURCE_EXHAUSTED') {
+            throw new Error(
+                "Veo quota exceeded. Try using Imagen for images instead, or check your API quotas at https://ai.dev/usage?tab=rate-limit"
+            );
+        }
+        throw error;
     }
-
-    const uri = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!uri) throw new Error("Failed to generate video URI");
-
-    // Append API key for download access as per guidelines
-    const apiKey = process.env.API_KEY || '';
-    return `${uri}&key=${apiKey}`;
 };
 
 /**
