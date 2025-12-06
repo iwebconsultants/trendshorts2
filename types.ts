@@ -22,6 +22,17 @@ export interface StrategyOption {
   trendingReason?: string; // Explanation of why this is trending
 }
 
+// Enhanced strategy with refinement data for passing to next phase
+export interface RefinedStrategy extends StrategyOption {
+  selectedKeywords: string[];
+  trendAnalysis?: {
+    topTrends?: string[];
+    alternateKeywords?: string[];
+    userRefinements?: string;
+  };
+  refinementNotes?: string; // Chat history or user notes
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;

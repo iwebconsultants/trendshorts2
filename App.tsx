@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrainstormStage } from './components/BrainstormStage';
 import { TechStackStage } from './components/TechStackStage';
 import { PrototypeDashboard } from './components/PrototypeDashboard';
-import { AppStage, StrategyOption, ToolOption } from './types';
+import './index.css';
+import { AppStage, StrategyOption, ToolOption, RefinedStrategy } from './types';
 import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle } from 'lucide-react';
 
 // --- Components for Landing Page Sections ---
@@ -10,71 +11,71 @@ import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layo
 const StepByStepPreview: React.FC = () => {
   return (
     <section className="py-24 bg-white border-b border-slate-100 relative overflow-hidden">
-        {/* Background Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
-            <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-100 rounded-full blur-3xl mix-blend-multiply"></div>
-            <div className="absolute bottom-10 right-10 w-64 h-64 bg-purple-100 rounded-full blur-3xl mix-blend-multiply"></div>
-        </div>
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-100 rounded-full blur-3xl mix-blend-multiply"></div>
+        <div className="absolute bottom-10 right-10 w-64 h-64 bg-purple-100 rounded-full blur-3xl mix-blend-multiply"></div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-20">
-           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">How TrendShorts Works</h2>
-           <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-             Go from "I need an idea" to "Ready to Publish" in three guided steps.
-           </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">How TrendShorts Works</h2>
+          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+            Go from "I need an idea" to "Ready to Publish" in three guided steps.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-           {/* Connector Line (Desktop) */}
-           <div className="hidden md:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-100 via-indigo-200 to-indigo-100 -z-10"></div>
+          {/* Connector Line (Desktop) */}
+          <div className="hidden md:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-100 via-indigo-200 to-indigo-100 -z-10"></div>
 
-           {/* Step 1 */}
-           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-transform duration-300">
-              <div className="w-16 h-16 bg-white rounded-2xl border-2 border-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold mb-6 mx-auto shadow-sm relative z-10">
-                1
-              </div>
-              <h3 className="text-xl font-bold text-center text-slate-900 mb-3">1. Research & Brainstorm</h3>
-              <p className="text-slate-600 text-center text-sm leading-relaxed mb-6">
-                Stop guessing what's trending. Select a region (e.g., US, Brazil) and category. Our AI performs live <strong>Google Grounded Search</strong> to find high-opportunity niches with low competition.
-              </p>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500 font-mono space-y-2">
-                 <div className="flex justify-between"><span className="text-slate-400">Query:</span> <span className="text-indigo-600">"AI History"</span></div>
-                 <div className="flex justify-between"><span className="text-slate-400">Gap:</span> <span className="text-emerald-600">High Volume</span></div>
-                 <div className="w-full bg-slate-200 h-1.5 rounded-full mt-1"><div className="w-[92%] h-full bg-indigo-500 rounded-full"></div></div>
-              </div>
-           </div>
+          {/* Step 1 */}
+          <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-transform duration-300">
+            <div className="w-16 h-16 bg-white rounded-2xl border-2 border-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold mb-6 mx-auto shadow-sm relative z-10">
+              1
+            </div>
+            <h3 className="text-xl font-bold text-center text-slate-900 mb-3">1. Research & Brainstorm</h3>
+            <p className="text-slate-600 text-center text-sm leading-relaxed mb-6">
+              Stop guessing what's trending. Select a region (e.g., US, Brazil) and category. Our AI performs live <strong>Google Grounded Search</strong> to find high-opportunity niches with low competition.
+            </p>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500 font-mono space-y-2">
+              <div className="flex justify-between"><span className="text-slate-400">Query:</span> <span className="text-indigo-600">"AI History"</span></div>
+              <div className="flex justify-between"><span className="text-slate-400">Gap:</span> <span className="text-emerald-600">High Volume</span></div>
+              <div className="w-full bg-slate-200 h-1.5 rounded-full mt-1"><div className="w-[92%] h-full bg-indigo-500 rounded-full"></div></div>
+            </div>
+          </div>
 
-           {/* Step 2 */}
-           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-transform duration-300">
-              <div className="w-16 h-16 bg-white rounded-2xl border-2 border-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold mb-6 mx-auto shadow-sm relative z-10">
-                2
-              </div>
-              <h3 className="text-xl font-bold text-center text-slate-900 mb-3">2. Build Your Stack</h3>
-              <p className="text-slate-600 text-center text-sm leading-relaxed mb-6">
-                Tailor your production pipeline. Choose <strong>Veo</strong> for cinematic video generation or <strong>Imagen 3</strong> for static storytelling. Toggle text-to-speech for automated narration.
-              </p>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500 font-mono space-y-2">
-                 <div className="flex items-center gap-2"><div className="w-3 h-3 bg-emerald-400 rounded-full"></div> <span>Gemini 2.5 Flash</span></div>
-                 <div className="flex items-center gap-2"><div className="w-3 h-3 bg-indigo-500 rounded-full"></div> <span>Veo Video Gen</span></div>
-                 <div className="flex items-center gap-2"><div className="w-3 h-3 bg-slate-300 rounded-full"></div> <span>Imagen (Disabled)</span></div>
-              </div>
-           </div>
+          {/* Step 2 */}
+          <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-transform duration-300">
+            <div className="w-16 h-16 bg-white rounded-2xl border-2 border-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold mb-6 mx-auto shadow-sm relative z-10">
+              2
+            </div>
+            <h3 className="text-xl font-bold text-center text-slate-900 mb-3">2. Build Your Stack</h3>
+            <p className="text-slate-600 text-center text-sm leading-relaxed mb-6">
+              Tailor your production pipeline. Choose <strong>Veo</strong> for cinematic video generation or <strong>Imagen 3</strong> for static storytelling. Toggle text-to-speech for automated narration.
+            </p>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500 font-mono space-y-2">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-emerald-400 rounded-full"></div> <span>Gemini 2.5 Flash</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-indigo-500 rounded-full"></div> <span>Veo Video Gen</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-slate-300 rounded-full"></div> <span>Imagen (Disabled)</span></div>
+            </div>
+          </div>
 
-           {/* Step 3 */}
-           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-transform duration-300">
-              <div className="w-16 h-16 bg-white rounded-2xl border-2 border-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold mb-6 mx-auto shadow-sm relative z-10">
-                3
-              </div>
-              <h3 className="text-xl font-bold text-center text-slate-900 mb-3">3. Content Generation</h3>
-              <p className="text-slate-600 text-center text-sm leading-relaxed mb-6">
-                Enter the dashboard. Generate a full script, visualize it with AI-generated media, edit prompts, and listen to the voiceover. Once satisfied, simulate the upload.
-              </p>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500 font-mono space-y-2">
-                 <div className="flex justify-between border-b border-slate-200 pb-1"><span>Script</span> <span className="text-emerald-500">Ready</span></div>
-                 <div className="flex justify-between border-b border-slate-200 pb-1 pt-1"><span>Audio</span> <span className="text-emerald-500">Synced</span></div>
-                 <div className="flex justify-between pt-1"><span>Video</span> <span className="text-indigo-500 animate-pulse">Rendering...</span></div>
-              </div>
-           </div>
+          {/* Step 3 */}
+          <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-transform duration-300">
+            <div className="w-16 h-16 bg-white rounded-2xl border-2 border-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold mb-6 mx-auto shadow-sm relative z-10">
+              3
+            </div>
+            <h3 className="text-xl font-bold text-center text-slate-900 mb-3">3. Content Generation</h3>
+            <p className="text-slate-600 text-center text-sm leading-relaxed mb-6">
+              Enter the dashboard. Generate a full script, visualize it with AI-generated media, edit prompts, and listen to the voiceover. Once satisfied, simulate the upload.
+            </p>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500 font-mono space-y-2">
+              <div className="flex justify-between border-b border-slate-200 pb-1"><span>Script</span> <span className="text-emerald-500">Ready</span></div>
+              <div className="flex justify-between border-b border-slate-200 pb-1 pt-1"><span>Audio</span> <span className="text-emerald-500">Synced</span></div>
+              <div className="flex justify-between pt-1"><span>Video</span> <span className="text-indigo-500 animate-pulse">Rendering...</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -87,7 +88,7 @@ const WorkflowDiagram: React.FC = () => {
       <div className="relative">
         {/* Connecting Line (Desktop) */}
         <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-slate-200 -z-10 -translate-y-1/2"></div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Step 1 */}
           <div className="flex flex-col items-center text-center group" title="Step 1: Trend Discovery">
@@ -100,16 +101,16 @@ const WorkflowDiagram: React.FC = () => {
 
           {/* Step 2 */}
           <div className="flex flex-col items-center text-center group" title="Step 2: Script Generation">
-             <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
+            <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
               <Cpu className="text-indigo-600" size={28} />
             </div>
             <h4 className="font-bold text-slate-900 mb-1">2. Ideation</h4>
             <p className="text-xs text-slate-500 max-w-[120px]">Gemini 2.5 Flash generates scripts</p>
           </div>
 
-           {/* Step 3 */}
-           <div className="flex flex-col items-center text-center group" title="Step 3: Media Creation">
-             <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
+          {/* Step 3 */}
+          <div className="flex flex-col items-center text-center group" title="Step 3: Media Creation">
+            <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
               <div className="flex gap-1">
                 <Video className="text-purple-500" size={18} />
                 <Mic className="text-amber-500" size={18} />
@@ -119,18 +120,18 @@ const WorkflowDiagram: React.FC = () => {
             <p className="text-xs text-slate-500 max-w-[120px]">Veo Video + Gemini TTS Audio</p>
           </div>
 
-           {/* Step 4 */}
-           <div className="flex flex-col items-center text-center group" title="Step 4: Editing & Stitching">
-             <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
+          {/* Step 4 */}
+          <div className="flex flex-col items-center text-center group" title="Step 4: Editing & Stitching">
+            <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
               <Layers className="text-slate-600" size={28} />
             </div>
             <h4 className="font-bold text-slate-900 mb-1">4. Assembly</h4>
             <p className="text-xs text-slate-500 max-w-[120px]">Automated Stitching & Editing</p>
           </div>
 
-           {/* Step 5 */}
-           <div className="flex flex-col items-center text-center group" title="Step 5: Publishing">
-             <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
+          {/* Step 5 */}
+          <div className="flex flex-col items-center text-center group" title="Step 5: Publishing">
+            <div className="w-16 h-16 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:border-indigo-500 group-hover:shadow-indigo-200 transition-all z-10">
               <Layout className="text-red-600" size={28} />
             </div>
             <h4 className="font-bold text-slate-900 mb-1">5. Publish</h4>
@@ -213,7 +214,7 @@ const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
         <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
         <p className="text-slate-500">Sign in to your TrendShorts dashboard</p>
       </div>
-      
+
       <div className="space-y-4">
         <button onClick={onLogin} title="Sign in with Google" className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-3 rounded-xl transition-all">
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -224,7 +225,7 @@ const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
           </svg>
           Continue with Google
         </button>
-        
+
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200"></div>
@@ -248,7 +249,7 @@ const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
           </button>
         </form>
       </div>
-      
+
       <p className="mt-6 text-center text-sm text-slate-600">
         Don't have an account? <button onClick={onLogin} title="Create an account" className="text-indigo-600 font-semibold hover:underline">Sign up for free</button>
       </p>
@@ -259,40 +260,40 @@ const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
 const Footer: React.FC = () => (
   <footer className="bg-slate-50 border-t border-slate-200 py-12">
     <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
-       <div>
-         <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-              <Zap size={18} fill="currentColor" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">TrendShorts</span>
-         </div>
-         <p className="text-sm text-slate-500">
-           AI-powered automated video creation suite for modern creators.
-         </p>
-       </div>
-       <div>
-         <h4 className="font-bold text-slate-900 mb-4">Product</h4>
-         <ul className="space-y-2 text-sm text-slate-500">
-           <li><span className="hover:text-indigo-600 cursor-pointer">Features</span></li>
-           <li><span className="hover:text-indigo-600 cursor-pointer">Pricing</span></li>
-           <li><span className="hover:text-indigo-600 cursor-pointer">Workflow</span></li>
-         </ul>
-       </div>
-       <div>
-         <h4 className="font-bold text-slate-900 mb-4">Resources</h4>
-         <ul className="space-y-2 text-sm text-slate-500">
-           <li><span className="hover:text-indigo-600 cursor-pointer">Blog</span></li>
-           <li><span className="hover:text-indigo-600 cursor-pointer">Community</span></li>
-           <li><span className="hover:text-indigo-600 cursor-pointer">Help Center</span></li>
-         </ul>
-       </div>
-       <div>
-         <h4 className="font-bold text-slate-900 mb-4">Legal</h4>
-         <ul className="space-y-2 text-sm text-slate-500">
-           <li><span className="hover:text-indigo-600 cursor-pointer">Privacy</span></li>
-           <li><span className="hover:text-indigo-600 cursor-pointer">Terms</span></li>
-         </ul>
-       </div>
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+            <Zap size={18} fill="currentColor" />
+          </div>
+          <span className="text-xl font-bold text-slate-900">TrendShorts</span>
+        </div>
+        <p className="text-sm text-slate-500">
+          AI-powered automated video creation suite for modern creators.
+        </p>
+      </div>
+      <div>
+        <h4 className="font-bold text-slate-900 mb-4">Product</h4>
+        <ul className="space-y-2 text-sm text-slate-500">
+          <li><span className="hover:text-indigo-600 cursor-pointer">Features</span></li>
+          <li><span className="hover:text-indigo-600 cursor-pointer">Pricing</span></li>
+          <li><span className="hover:text-indigo-600 cursor-pointer">Workflow</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-bold text-slate-900 mb-4">Resources</h4>
+        <ul className="space-y-2 text-sm text-slate-500">
+          <li><span className="hover:text-indigo-600 cursor-pointer">Blog</span></li>
+          <li><span className="hover:text-indigo-600 cursor-pointer">Community</span></li>
+          <li><span className="hover:text-indigo-600 cursor-pointer">Help Center</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-bold text-slate-900 mb-4">Legal</h4>
+        <ul className="space-y-2 text-sm text-slate-500">
+          <li><span className="hover:text-indigo-600 cursor-pointer">Privacy</span></li>
+          <li><span className="hover:text-indigo-600 cursor-pointer">Terms</span></li>
+        </ul>
+      </div>
     </div>
     <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-200 text-center text-sm text-slate-400">
       © 2024 TrendShorts AI. All rights reserved.
@@ -319,7 +320,7 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
       {/* Header */}
       <header className="border-b border-slate-100 sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setActiveSection('HOME')}
             title="Return to Home"
@@ -331,36 +332,35 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
           </div>
           <div className="flex items-center gap-6">
             <nav className="hidden md:flex gap-6 text-sm font-medium text-slate-500">
-              <button 
+              <button
                 onClick={() => setActiveSection('HOME')}
                 title="View Features"
-                className={`transition-colors ${activeSection === 'HOME' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}
+                className={`transition - colors ${activeSection === 'HOME' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'} `}
               >
                 Features
               </button>
-              <button 
+              <button
                 onClick={() => setActiveSection('WORKFLOW')}
                 title="View How It Works"
-                className={`transition-colors ${activeSection === 'WORKFLOW' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}
+                className={`transition - colors ${activeSection === 'WORKFLOW' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'} `}
               >
                 Workflow
               </button>
-              <button 
+              <button
                 onClick={() => setActiveSection('PRICING')}
                 title="View Pricing Plans"
-                className={`transition-colors ${activeSection === 'PRICING' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}
+                className={`transition - colors ${activeSection === 'PRICING' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'} `}
               >
                 Pricing
               </button>
             </nav>
-            <button 
+            <button
               onClick={() => setActiveSection('LOGIN')}
               title="Sign in to your account"
-              className={`px-6 py-2.5 rounded-full font-semibold transition-all ${
-                  activeSection === 'LOGIN' 
-                  ? 'bg-slate-800 text-white' 
+              className={`px - 6 py - 2.5 rounded - full font - semibold transition - all ${activeSection === 'LOGIN'
+                  ? 'bg-slate-800 text-white'
                   : 'bg-slate-900 hover:bg-slate-800 text-white'
-              }`}
+                } `}
             >
               Log In
             </button>
@@ -388,28 +388,28 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                 <p className="text-xl text-slate-600 leading-relaxed max-w-lg">
                   Brainstorm profitable niches, prototype scripts, and generate cinematic visuals using Google's Gemini & Veo—all in one workflow.
                 </p>
-                
+
                 {/* Trusted By Badges */}
                 <div className="flex items-center gap-4 text-sm text-slate-400 font-medium">
-                    <span>Trusted by creators from:</span>
-                    <div className="flex gap-2 opacity-60 grayscale hover:grayscale-0 transition-all">
-                        <span className="font-bold text-slate-600">YouTube</span>
-                        <span className="font-bold text-slate-600">•</span>
-                        <span className="font-bold text-slate-600">TikTok</span>
-                        <span className="font-bold text-slate-600">•</span>
-                        <span className="font-bold text-slate-600">Instagram</span>
-                    </div>
+                  <span>Trusted by creators from:</span>
+                  <div className="flex gap-2 opacity-60 grayscale hover:grayscale-0 transition-all">
+                    <span className="font-bold text-slate-600">YouTube</span>
+                    <span className="font-bold text-slate-600">•</span>
+                    <span className="font-bold text-slate-600">TikTok</span>
+                    <span className="font-bold text-slate-600">•</span>
+                    <span className="font-bold text-slate-600">Instagram</span>
+                  </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <button 
+                  <button
                     onClick={() => setActiveSection('LOGIN')}
                     title="Get Started for Free"
                     className="bg-indigo-600 hover:bg-indigo-500 text-white text-lg font-bold px-8 py-4 rounded-xl shadow-xl shadow-indigo-200 transition-transform hover:scale-105 flex items-center gap-2"
                   >
                     Start Building Free <ArrowRight size={20} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveSection('WORKFLOW')}
                     title="Learn about the automation pipeline"
                     className="px-8 py-4 rounded-xl font-bold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors"
@@ -418,36 +418,36 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="flex-1 relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl opacity-20 blur-2xl"></div>
                 <div className="relative bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
-                   <div className="bg-slate-50 border-b border-slate-200 p-4 flex items-center gap-2">
-                     <div className="flex gap-1.5">
-                       <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                       <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                       <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                     </div>
-                     <div className="bg-white px-3 py-1 rounded-md text-xs text-slate-400 font-mono flex-1 text-center">trendshorts.ai/dashboard</div>
-                   </div>
-                   <div className="p-8 space-y-6">
-                     <div className="flex gap-4">
-                        <div className="w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <BarChart3 className="text-indigo-600" />
-                        </div>
-                        <div className="flex-1 space-y-2">
-                            <div className="h-4 bg-slate-100 rounded w-3/4"></div>
-                            <div className="h-4 bg-slate-100 rounded w-1/2"></div>
-                        </div>
-                     </div>
-                     <div className="h-32 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center text-slate-400 text-sm">
-                        AI Generating Content...
-                     </div>
-                     <div className="flex gap-2">
-                        <div className="h-8 bg-slate-100 rounded w-20"></div>
-                        <div className="h-8 bg-indigo-600 rounded w-24 opacity-20"></div>
-                     </div>
-                   </div>
+                  <div className="bg-slate-50 border-b border-slate-200 p-4 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <div className="bg-white px-3 py-1 rounded-md text-xs text-slate-400 font-mono flex-1 text-center">trendshorts.ai/dashboard</div>
+                  </div>
+                  <div className="p-8 space-y-6">
+                    <div className="flex gap-4">
+                      <div className="w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <BarChart3 className="text-indigo-600" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-slate-100 rounded w-3/4"></div>
+                        <div className="h-4 bg-slate-100 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                    <div className="h-32 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center text-slate-400 text-sm">
+                      AI Generating Content...
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-8 bg-slate-100 rounded w-20"></div>
+                      <div className="h-8 bg-indigo-600 rounded w-24 opacity-20"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -458,163 +458,163 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
             {/* Feature Cards Grid (Enhanced) */}
             <section className="bg-slate-50 py-24 border-y border-slate-200">
               <div className="max-w-7xl mx-auto px-6">
-                 <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold text-slate-900 mb-4">Everything you need to go viral</h2>
-                    <p className="text-slate-600 max-w-2xl mx-auto">Stop guessing. Start generating data-backed content.</p>
-                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Feature 1 */}
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
-                            <BarChart3 size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Predictive Brainstorming</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                            Don't just pick a topic. Use Google Search Grounding to validate niche demand before you create a single video.
-                        </p>
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl font-bold text-slate-900 mb-4">Everything you need to go viral</h2>
+                  <p className="text-slate-600 max-w-2xl mx-auto">Stop guessing. Start generating data-backed content.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Feature 1 */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                      <BarChart3 size={24} />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Predictive Brainstorming</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      Don't just pick a topic. Use Google Search Grounding to validate niche demand before you create a single video.
+                    </p>
+                  </div>
 
-                    {/* Feature 2 */}
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
-                            <Layers size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Modular AI Stack</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                            Mix and match models. Use Veo for cinematic video or Imagen for static storytelling. You control the cost/quality ratio.
-                        </p>
+                  {/* Feature 2 */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                      <Layers size={24} />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Modular AI Stack</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      Mix and match models. Use Veo for cinematic video or Imagen for static storytelling. You control the cost/quality ratio.
+                    </p>
+                  </div>
 
-                    {/* Feature 3 */}
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
-                            <PlayCircle size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Instant Prototyping</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                            Visualize the final output immediately. See the script, hear the voiceover, and watch the Veo video in one dashboard.
-                        </p>
+                  {/* Feature 3 */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
+                      <PlayCircle size={24} />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Instant Prototyping</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      Visualize the final output immediately. See the script, hear the voiceover, and watch the Veo video in one dashboard.
+                    </p>
+                  </div>
 
-                    {/* Feature 4 */}
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6">
-                            <Mic size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Natural Voiceovers</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                            Integrated Gemini TTS provides engaging, human-like narration that keeps retention high.
-                        </p>
+                  {/* Feature 4 */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6">
+                      <Mic size={24} />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Natural Voiceovers</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      Integrated Gemini TTS provides engaging, human-like narration that keeps retention high.
+                    </p>
+                  </div>
 
-                     {/* Feature 5 */}
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center mb-6">
-                            <Globe size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Global Trend Targeting</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                            Target specific regions like the US, UK, Brazil, or India to find untapped local markets.
-                        </p>
+                  {/* Feature 5 */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center mb-6">
+                      <Globe size={24} />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Global Trend Targeting</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      Target specific regions like the US, UK, Brazil, or India to find untapped local markets.
+                    </p>
+                  </div>
 
-                     {/* Feature 6 */}
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center mb-6">
-                            <Layout size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Auto-Formatting</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                            Scripts and assets are automatically formatted for the 9:16 vertical Shorts aspect ratio.
-                        </p>
+                  {/* Feature 6 */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center mb-6">
+                      <Layout size={24} />
                     </div>
-                 </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Auto-Formatting</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      Scripts and assets are automatically formatted for the 9:16 vertical Shorts aspect ratio.
+                    </p>
+                  </div>
+                </div>
               </div>
             </section>
 
             {/* Testimonials / Social Proof */}
             <section className="bg-white py-24">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-4">Loved by Automation Experts</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                            <div className="flex gap-1 text-amber-400 mb-3"><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/></div>
-                            <p className="text-slate-700 italic mb-4">"The Veo integration is a game changer. I used to spend hours finding stock footage, now I just generate exactly what I need."</p>
-                            <div className="font-bold text-slate-900 text-sm">- Sarah J., Faceless Channel Creator</div>
-                        </div>
-                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                             <div className="flex gap-1 text-amber-400 mb-3"><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/></div>
-                            <p className="text-slate-700 italic mb-4">"Brainstorming usually takes me a week. With TrendShorts, I found 3 profitable niches in 10 minutes."</p>
-                            <div className="font-bold text-slate-900 text-sm">- Mike T., Digital Marketer</div>
-                        </div>
-                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                             <div className="flex gap-1 text-amber-400 mb-3"><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/></div>
-                            <p className="text-slate-700 italic mb-4">"Finally, a tool that actually understands context. The scripts aren't just generic AI fluff."</p>
-                            <div className="font-bold text-slate-900 text-sm">- Alex R., Content Strategist</div>
-                        </div>
-                    </div>
+              <div className="max-w-7xl mx-auto px-6">
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl font-bold text-slate-900 mb-4">Loved by Automation Experts</h2>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div className="flex gap-1 text-amber-400 mb-3"><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /></div>
+                    <p className="text-slate-700 italic mb-4">"The Veo integration is a game changer. I used to spend hours finding stock footage, now I just generate exactly what I need."</p>
+                    <div className="font-bold text-slate-900 text-sm">- Sarah J., Faceless Channel Creator</div>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div className="flex gap-1 text-amber-400 mb-3"><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /></div>
+                    <p className="text-slate-700 italic mb-4">"Brainstorming usually takes me a week. With TrendShorts, I found 3 profitable niches in 10 minutes."</p>
+                    <div className="font-bold text-slate-900 text-sm">- Mike T., Digital Marketer</div>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div className="flex gap-1 text-amber-400 mb-3"><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /></div>
+                    <p className="text-slate-700 italic mb-4">"Finally, a tool that actually understands context. The scripts aren't just generic AI fluff."</p>
+                    <div className="font-bold text-slate-900 text-sm">- Alex R., Content Strategist</div>
+                  </div>
+                </div>
+              </div>
             </section>
           </>
         )}
 
         {activeSection === 'WORKFLOW' && (
           <div className="py-24 bg-slate-50 min-h-screen">
-             <div className="max-w-7xl mx-auto px-6">
-                <div className="text-center mb-16 space-y-4">
-                  <h2 className="text-4xl font-bold text-slate-900">The Automation Pipeline</h2>
-                  <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-                    Visualize how TrendShorts connects different AI models to create a seamless production line.
-                  </p>
-                </div>
-                
-                {/* Visual Block Diagram */}
-                <div className="bg-white p-12 rounded-3xl shadow-xl border border-slate-200">
-                    <WorkflowDiagram />
-                </div>
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="text-center mb-16 space-y-4">
+                <h2 className="text-4xl font-bold text-slate-900">The Automation Pipeline</h2>
+                <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+                  Visualize how TrendShorts connects different AI models to create a seamless production line.
+                </p>
+              </div>
 
-                <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                    <div className="space-y-6">
-                        <h3 className="text-2xl font-bold text-slate-900">Why this architecture?</h3>
-                        <p className="text-slate-600 leading-relaxed">
-                          We separate the <strong>Reasoning Layer</strong> (Gemini) from the <strong>Generation Layer</strong> (Veo/Imagen/TTS). This ensures that your content is logically sound and fact-checked before any expensive media generation occurs.
-                        </p>
-                        <ul className="space-y-4">
-                          <li className="flex gap-3">
-                            <div className="mt-1"><CheckCircle2 className="text-indigo-600" size={20} /></div>
-                            <div>
-                              <strong className="text-slate-900 block">Cost Efficiency</strong>
-                              <span className="text-slate-500 text-sm">Only generate video when the script is perfect.</span>
-                            </div>
-                          </li>
-                          <li className="flex gap-3">
-                            <div className="mt-1"><CheckCircle2 className="text-indigo-600" size={20} /></div>
-                            <div>
-                              <strong className="text-slate-900 block">Modularity</strong>
-                              <span className="text-slate-500 text-sm">Swap out models (e.g., switch Veo for Imagen) instantly.</span>
-                            </div>
-                          </li>
-                        </ul>
-                    </div>
-                    <div className="bg-slate-900 rounded-2xl p-8 text-slate-300 font-mono text-sm leading-loose shadow-2xl">
-                      <div className="flex gap-1.5 mb-4">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              {/* Visual Block Diagram */}
+              <div className="bg-white p-12 rounded-3xl shadow-xl border border-slate-200">
+                <WorkflowDiagram />
+              </div>
+
+              <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div className="space-y-6">
+                  <h3 className="text-2xl font-bold text-slate-900">Why this architecture?</h3>
+                  <p className="text-slate-600 leading-relaxed">
+                    We separate the <strong>Reasoning Layer</strong> (Gemini) from the <strong>Generation Layer</strong> (Veo/Imagen/TTS). This ensures that your content is logically sound and fact-checked before any expensive media generation occurs.
+                  </p>
+                  <ul className="space-y-4">
+                    <li className="flex gap-3">
+                      <div className="mt-1"><CheckCircle2 className="text-indigo-600" size={20} /></div>
+                      <div>
+                        <strong className="text-slate-900 block">Cost Efficiency</strong>
+                        <span className="text-slate-500 text-sm">Only generate video when the script is perfect.</span>
                       </div>
-                      <p><span className="text-purple-400">const</span> <span className="text-blue-400">pipeline</span> = <span className="text-purple-400">await</span> ai.workflow.create(&#123;</p>
-                      <p className="pl-4">inputs: [<span className="text-green-400">'trends'</span>, <span className="text-green-400">'topic'</span>],</p>
-                      <p className="pl-4">models: &#123;</p>
-                      <p className="pl-8">script: <span className="text-green-400">'gemini-2.5-flash'</span>,</p>
-                      <p className="pl-8">video: <span className="text-green-400">'veo-3.1'</span>,</p>
-                      <p className="pl-8">audio: <span className="text-green-400">'gemini-tts'</span></p>
-                      <p className="pl-4">&#125;</p>
-                      <p>&#125;);</p>
-                    </div>
+                    </li>
+                    <li className="flex gap-3">
+                      <div className="mt-1"><CheckCircle2 className="text-indigo-600" size={20} /></div>
+                      <div>
+                        <strong className="text-slate-900 block">Modularity</strong>
+                        <span className="text-slate-500 text-sm">Swap out models (e.g., switch Veo for Imagen) instantly.</span>
+                      </div>
+                    </li>
+                  </ul>
                 </div>
-             </div>
+                <div className="bg-slate-900 rounded-2xl p-8 text-slate-300 font-mono text-sm leading-loose shadow-2xl">
+                  <div className="flex gap-1.5 mb-4">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <p><span className="text-purple-400">const</span> <span className="text-blue-400">pipeline</span> = <span className="text-purple-400">await</span> ai.workflow.create(&#123;</p>
+                  <p className="pl-4">inputs: [<span className="text-green-400">'trends'</span>, <span className="text-green-400">'topic'</span>],</p>
+                  <p className="pl-4">models: &#123;</p>
+                  <p className="pl-8">script: <span className="text-green-400">'gemini-2.5-flash'</span>,</p>
+                  <p className="pl-8">video: <span className="text-green-400">'veo-3.1'</span>,</p>
+                  <p className="pl-8">audio: <span className="text-green-400">'gemini-tts'</span></p>
+                  <p className="pl-4">&#125;</p>
+                  <p>&#125;);</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -632,9 +632,9 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
 
         {activeSection === 'LOGIN' && (
           <div className="py-24 bg-slate-50 min-h-screen flex items-center justify-center">
-             <div className="w-full">
-                <LoginSection onLogin={onLogin} />
-             </div>
+            <div className="w-full">
+              <LoginSection onLogin={onLogin} />
+            </div>
           </div>
         )}
       </main>
@@ -645,132 +645,132 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
 };
 
 const App: React.FC = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [stage, setStage] = useState<AppStage>(AppStage.BRAINSTORM);
-    
-    // Application State
-    const [selectedGenre, setSelectedGenre] = useState('');
-    const [selectedStrategy, setSelectedStrategy] = useState<StrategyOption | null>(null);
-    const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [stage, setStage] = useState<AppStage>(AppStage.BRAINSTORM);
 
-    const handleLogin = async () => {
-        // Handle API Key selection specifically for Veo/Gemini
-        const win = window as any;
-        if (win.aistudio) {
-            try {
-                const hasKey = await win.aistudio.hasSelectedApiKey();
-                if (!hasKey) {
-                    await win.aistudio.openSelectKey();
-                }
-            } catch (e: any) {
-                console.error("API Key selection error", e);
-                // Retry logic if entity not found (race condition or bad state)
-                if (e.message && e.message.includes("Requested entity was not found")) {
-                     try {
-                        await win.aistudio.openSelectKey();
-                     } catch (retryError) {
-                         console.error("Retry failed", retryError);
-                         alert("Please select a valid API key project to continue.");
-                         return;
-                     }
-                }
-            }
+  // Application State
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [selectedStrategy, setSelectedStrategy] = useState<RefinedStrategy | null>(null);
+  const [selectedTools, setSelectedTools] = useState<ToolOption[]>([]);
+
+  const handleLogin = async () => {
+    // Handle API Key selection specifically for Veo/Gemini
+    const win = window as any;
+    if (win.aistudio) {
+      try {
+        const hasKey = await win.aistudio.hasSelectedApiKey();
+        if (!hasKey) {
+          await win.aistudio.openSelectKey();
         }
-        
-        setIsLoggedIn(true);
-    };
-
-    const handleBrainstormComplete = (genre: string, strategy: StrategyOption) => {
-        setSelectedGenre(genre);
-        setSelectedStrategy(strategy);
-        setStage(AppStage.TECH_STACK);
-    };
-
-    const handleStackComplete = (tools: ToolOption[]) => {
-        setSelectedTools(tools);
-        setStage(AppStage.CONTENT_GENERATION);
-    };
-    
-    const handleBackToBrainstorm = () => {
-        setStage(AppStage.BRAINSTORM);
-        setSelectedStrategy(null);
-    };
-
-    const handleBackToStack = () => {
-        setStage(AppStage.TECH_STACK);
-    };
-    
-    const handleLogout = () => {
-        setIsLoggedIn(false);
-        setStage(AppStage.BRAINSTORM);
-        // Reset state
-        setSelectedStrategy(null);
-        setSelectedTools([]);
-        setSelectedGenre('');
-    };
-
-    if (!isLoggedIn) {
-        return <LandingPage onLogin={handleLogin} />;
+      } catch (e: any) {
+        console.error("API Key selection error", e);
+        // Retry logic if entity not found (race condition or bad state)
+        if (e.message && e.message.includes("Requested entity was not found")) {
+          try {
+            await win.aistudio.openSelectKey();
+          } catch (retryError) {
+            console.error("Retry failed", retryError);
+            alert("Please select a valid API key project to continue.");
+            return;
+          }
+        }
+      }
     }
-    
-    // Main App Layout
-    return (
-        <div className="h-screen bg-slate-100 flex flex-col font-sans text-slate-900 overflow-hidden">
-             {/* App Header */}
-             <header className="bg-slate-900 text-white h-16 shrink-0 flex items-center justify-between px-6 shadow-md z-20">
-                 <div className="flex items-center gap-3">
-                     <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                         <Zap size={18} fill="currentColor" className="text-white" />
-                     </div>
-                     <span className="font-bold text-lg tracking-tight">TrendShorts Studio</span>
-                 </div>
-                 
-                 <div className="flex items-center gap-4">
-                      {/* Stage Indicator */}
-                      <div className="hidden md:flex bg-slate-800 rounded-full px-4 py-1.5 gap-2 items-center text-xs font-bold uppercase tracking-wider">
-                          <span className={`${stage === AppStage.BRAINSTORM ? 'text-indigo-400' : 'text-slate-500'}`}>1. Brainstorm</span>
-                          <span className="text-slate-600">/</span>
-                          <span className={`${stage === AppStage.TECH_STACK ? 'text-indigo-400' : 'text-slate-500'}`}>2. Stack</span>
-                          <span className="text-slate-600">/</span>
-                          <span className={`${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-400' : 'text-slate-500'}`}>3. Create</span>
-                      </div>
 
-                      <div className="h-6 w-px bg-slate-700"></div>
+    setIsLoggedIn(true);
+  };
 
-                      <button 
-                        onClick={handleLogout}
-                        className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"
-                      >
-                         <LogOut size={16} /> Exit
-                      </button>
-                 </div>
-             </header>
+  const handleBrainstormComplete = (genre: string, strategy: RefinedStrategy) => {
+    setSelectedGenre(genre);
+    setSelectedStrategy(strategy);
+    setStage(AppStage.TECH_STACK);
+  };
 
-             {/* Main Content Area */}
-             <main className="flex-1 overflow-hidden relative">
-                {stage === AppStage.BRAINSTORM && (
-                    <BrainstormStage onComplete={handleBrainstormComplete} />
-                )}
-                
-                {stage === AppStage.TECH_STACK && (
-                    <div className="h-full p-4 md:p-8 max-w-5xl mx-auto">
-                        <TechStackStage onNext={handleStackComplete} onBack={handleBackToBrainstorm} />
-                    </div>
-                )}
-                
-                {stage === AppStage.CONTENT_GENERATION && selectedStrategy && (
-                    <div className="h-full p-4 md:p-6">
-                        <PrototypeDashboard 
-                            genre={selectedGenre} 
-                            strategy={selectedStrategy} 
-                            tools={selectedTools} 
-                            onBack={handleBackToStack}
-                        />
-                    </div>
-                )}
-             </main>
+  const handleStackComplete = (tools: ToolOption[]) => {
+    setSelectedTools(tools);
+    setStage(AppStage.CONTENT_GENERATION);
+  };
+
+  const handleBackToBrainstorm = () => {
+    setStage(AppStage.BRAINSTORM);
+    setSelectedStrategy(null);
+  };
+
+  const handleBackToStack = () => {
+    setStage(AppStage.TECH_STACK);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setStage(AppStage.BRAINSTORM);
+    // Reset state
+    setSelectedStrategy(null);
+    setSelectedTools([]);
+    setSelectedGenre('');
+  };
+
+  if (!isLoggedIn) {
+    return <LandingPage onLogin={handleLogin} />;
+  }
+
+  // Main App Layout
+  return (
+    <div className="h-screen bg-slate-100 flex flex-col font-sans text-slate-900 overflow-hidden">
+      {/* App Header */}
+      <header className="bg-slate-900 text-white h-16 shrink-0 flex items-center justify-between px-6 shadow-md z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+            <Zap size={18} fill="currentColor" className="text-white" />
+          </div>
+          <span className="font-bold text-lg tracking-tight">TrendShorts Studio</span>
         </div>
-    );
+
+        <div className="flex items-center gap-4">
+          {/* Stage Indicator */}
+          <div className="hidden md:flex bg-slate-800 rounded-full px-4 py-1.5 gap-2 items-center text-xs font-bold uppercase tracking-wider">
+            <span className={`${stage === AppStage.BRAINSTORM ? 'text-indigo-400' : 'text-slate-500'} `}>1. Brainstorm</span>
+            <span className="text-slate-600">/</span>
+            <span className={`${stage === AppStage.TECH_STACK ? 'text-indigo-400' : 'text-slate-500'} `}>2. Stack</span>
+            <span className="text-slate-600">/</span>
+            <span className={`${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-400' : 'text-slate-500'} `}>3. Create</span>
+          </div>
+
+          <div className="h-6 w-px bg-slate-700"></div>
+
+          <button
+            onClick={handleLogout}
+            className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"
+          >
+            <LogOut size={16} /> Exit
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-hidden relative">
+        {stage === AppStage.BRAINSTORM && (
+          <BrainstormStage onComplete={handleBrainstormComplete} />
+        )}
+
+        {stage === AppStage.TECH_STACK && (
+          <div className="h-full p-4 md:p-8 max-w-5xl mx-auto">
+            <TechStackStage onNext={handleStackComplete} onBack={handleBackToBrainstorm} />
+          </div>
+        )}
+
+        {stage === AppStage.CONTENT_GENERATION && selectedStrategy && (
+          <div className="h-full p-4 md:p-6">
+            <PrototypeDashboard
+              genre={selectedGenre}
+              strategy={selectedStrategy}
+              tools={selectedTools}
+              onBack={handleBackToStack}
+            />
+          </div>
+        )}
+      </main>
+    </div>
+  );
 };
 
 export default App;

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StrategyOption, ChatMessage } from '../types';
+import { StrategyOption, ChatMessage, RefinedStrategy } from '../types';
 import { brainstormStrategies, chatAboutStrategy } from '../services/gemini';
 import { getTopTrends, generateAlternateKeywords, TrendData } from '../services/trends';
 import { Loader2, Zap, TrendingUp, Filter, Clock, X, RotateCcw, Globe, Plus, MapPin, Tag, ChevronDown, ChevronUp, Edit2, Send, MessageSquare, ExternalLink, Sparkles, Lightbulb, Flame, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 interface Props {
-    onComplete: (genre: string, strategy: StrategyOption) => void;
+    onComplete: (genre: string, strategy: RefinedStrategy) => void;
 }
 
 const COUNTRIES = [
@@ -477,8 +477,8 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
                                         onClick={() => handleAddTrendKeyword(trend.keyword)}
                                         disabled={keywords.includes(trend.keyword)}
                                         className={`group relative bg-white rounded-xl p-3 border-2 transition-all hover:shadow-md ${keywords.includes(trend.keyword)
-                                                ? 'border-gray-200 opacity-50 cursor-not-allowed'
-                                                : 'border-transparent hover:border-orange-300 cursor-pointer'
+                                            ? 'border-gray-200 opacity-50 cursor-not-allowed'
+                                            : 'border-transparent hover:border-orange-300 cursor-pointer'
                                             }`}
                                     >
                                         <div className="flex items-start justify-between mb-2">
@@ -640,7 +640,20 @@ export const BrainstormStage: React.FC<Props> = ({ onComplete }) => {
                                             </div>
 
                                             <button
-                                                onClick={() => onComplete(keywords.join(' '), strategy)}
+                                                onClick={() => {
+                                                    // Build refined strategy with all context
+                                                    const refinedStrategy: RefinedStrategy = {
+                                                        ...strategy,
+                                                        selectedKeywords: keywords,
+                                                        trendAnalysis: {
+                                                            topTrends: topTrends.slice(0, 5).map(t => t.keyword),
+                                                            alternateKeywords: alternateKeywords,
+                                                            userRefinements: selectedLocations.join(', ') + ' • ' + selectedCategories.join(', ')
+                                                        },
+                                                        refinementNotes: chatHistories[idx]?.map(m => `${m.role}: ${m.text}`).join('\n') || ''
+                                                    };
+                                                    onComplete(keywords.join(' '), refinedStrategy);
+                                                }}
                                                 className="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
                                             >
                                                 Generate Content <ExternalLink size={16} />
