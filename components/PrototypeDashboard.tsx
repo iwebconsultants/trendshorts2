@@ -131,10 +131,31 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
 
             // Trigger generation automatically for smooth workflow
             hasAutoTriggered.current = true;
-            // Use a timeout to ensure state is set before triggering (React state batching)
             setTimeout(() => handleGenerateConcept(autoTopic), 100);
         }
     }, [strategy, genre, initialData]);
+
+    // AUTO-CHAINING: Generate Video & Voiceover once Concept is ready
+    useEffect(() => {
+        if (concept && !isGenerating) {
+            // 1. Auto-Generate Video (if none exists)
+            if (!videoUrl && !motionUrls && !imageUrl && !isVideoLoading && !isImageLoading && concept.imagePrompts.length > 0) {
+                // Use a small timeout to prevent state clashes
+                setTimeout(() => {
+                    console.log("Auto-triggering video generation...");
+                    handleGenerateVideo(concept.imagePrompts[0]);
+                }, 500);
+            }
+
+            // 2. Auto-Generate Voiceover (if not exists)
+            if (!audioBase64 && !isAudioLoading && concept.script) {
+                setTimeout(() => {
+                    console.log("Auto-triggering voiceover...");
+                    handleGenerateVoiceover();
+                }, 1000);
+            }
+        }
+    }, [concept, isGenerating]);
 
     // Initialize Web Audio API
     useEffect(() => {

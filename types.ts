@@ -2,7 +2,9 @@
 export enum AppStage {
   BRAINSTORM = 'BRAINSTORM',
   CONTENT_GENERATION = 'CONTENT_GENERATION',
-  PUBLISH = 'PUBLISH'
+  PUBLISH = 'PUBLISH',
+  PROFILE = 'PROFILE',
+  SETTINGS = 'SETTINGS'
 }
 
 export interface StrategyOption {

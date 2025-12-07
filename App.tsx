@@ -4,8 +4,10 @@ import { PrototypeDashboard } from './components/PrototypeDashboard';
 import { PublishStage } from './components/PublishStage';
 import { ProjectHistoryModal } from './components/ProjectHistoryModal';
 import { AppStage, StrategyOption, ToolOption, RefinedStrategy, ShortConcept, SavedProject } from './types';
+import { ProfilePage } from './components/ProfilePage';
+import { SettingsPage } from './components/SettingsPage';
 import { getAiClient } from './services/gemini';
-import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle, AlertCircle } from 'lucide-react';
+import { Key, Home, Zap, Layers, PlayCircle, BarChart3, ArrowRight, LogOut, Layout, Cpu, Video, Mic, Globe, CheckCircle2, X, Star, Users, MessageCircle, AlertCircle, Settings, User } from 'lucide-react';
 
 // --- Components for Landing Page Sections ---
 
@@ -661,13 +663,20 @@ const App: React.FC = () => {
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
 
   // Provider states
-  const [imageProvider, setImageProvider] = useState<'google' | 'pollinations'>('google');
-  const [videoProvider, setVideoProvider] = useState<'veo' | 'flux-motion'>('veo');
+  const [imageProvider, setImageProvider] = useState<'google' | 'pollinations'>('pollinations');
+  const [videoProvider, setVideoProvider] = useState<'veo' | 'flux-motion'>('flux-motion');
 
   const [hasApiKey, setHasApiKey] = useState(false);
 
   useEffect(() => {
     const checkApiKey = async () => {
+      // Prioritize Runtime Config (Docker) -> Process Env (Local/Build) -> Legacy AI Studio
+      const envKey = (window as any).env?.API_KEY || process.env.API_KEY;
+      if (envKey) {
+        setHasApiKey(true);
+        return;
+      }
+
       const win = window as any;
       if (win.aistudio) {
         try {
@@ -866,6 +875,24 @@ const App: React.FC = () => {
 
           {/* User Profile / API Key Status */}
           <div className="flex items-center gap-3">
+            {/* Profile & Settings Links */}
+            <button
+              onClick={() => setStage(AppStage.PROFILE)}
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-all"
+              title="My Profile"
+            >
+              <User size={20} />
+            </button>
+            <button
+              onClick={() => setStage(AppStage.SETTINGS)}
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-all"
+              title="Settings"
+            >
+              <Settings size={20} />
+            </button>
+
+            <div className="h-4 w-px bg-slate-700 hidden md:block mx-1"></div>
+
             {hasApiKey ? (
               <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium bg-emerald-400/10 px-2 py-1 rounded-full border border-emerald-400/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
@@ -893,28 +920,35 @@ const App: React.FC = () => {
       </header>
 
       {/* Stage Indicator */}
-      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center justify-center shadow-sm z-10">
-        <div className="flex items-center gap-2 md:gap-8 text-sm">
-          <div className={`flex items-center gap-2 ${stage === AppStage.BRAINSTORM ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.BRAINSTORM ? 'bg-indigo-100' : 'bg-slate-100'}`}>1</div>
-            <span>Brainstorm</span>
+      {/* Stage Indicator */}
+      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center justify-center shadow-sm z-10 transition-all">
+        {(stage === AppStage.PROFILE || stage === AppStage.SETTINGS) ? (
+          <div className="text-sm font-medium text-slate-500">
+            {stage === AppStage.PROFILE ? 'User Profile' : 'Application Settings'}
           </div>
-          <div className="w-8 h-px bg-slate-200"></div>
-          <div className={`flex items-center gap-2 ${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.CONTENT_GENERATION ? 'bg-indigo-100' : 'bg-slate-100'}`}>2</div>
-            <span>Studio</span>
+        ) : (
+          <div className="flex items-center gap-2 md:gap-8 text-sm">
+            <div className={`flex items-center gap-2 ${stage === AppStage.BRAINSTORM ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.BRAINSTORM ? 'bg-indigo-100' : 'bg-slate-100'}`}>1</div>
+              <span>Brainstorm</span>
+            </div>
+            <div className="w-8 h-px bg-slate-200"></div>
+            <div className={`flex items-center gap-2 ${stage === AppStage.CONTENT_GENERATION ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.CONTENT_GENERATION ? 'bg-indigo-100' : 'bg-slate-100'}`}>2</div>
+              <span>Studio</span>
+            </div>
+            <div className="w-8 h-px bg-slate-200"></div>
+            <div className={`flex items-center gap-2 ${stage === AppStage.PUBLISH ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.PUBLISH ? 'bg-indigo-100' : 'bg-slate-100'}`}>3</div>
+              <span>Publish</span>
+            </div>
           </div>
-          <div className="w-8 h-px bg-slate-200"></div>
-          <div className={`flex items-center gap-2 ${stage === AppStage.PUBLISH ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stage === AppStage.PUBLISH ? 'bg-indigo-100' : 'bg-slate-100'}`}>3</div>
-            <span>Publish</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden relative">
-        {!hasApiKey && stage !== AppStage.PUBLISH && (
+        {!hasApiKey && stage !== AppStage.PUBLISH && stage !== AppStage.PROFILE && stage !== AppStage.SETTINGS && (
           <div className="absolute top-0 left-0 w-full bg-amber-50 text-amber-800 px-4 py-2 text-xs text-center border-b border-amber-100 z-10 flex items-center justify-center gap-2">
             <AlertCircle size={12} />
             <span>Using Demo Mode. Connect Google AI Studio API key for full functionality.</span>
@@ -956,6 +990,18 @@ const App: React.FC = () => {
               onBack={handleBackToStudio}
               onRestart={() => setStage(AppStage.BRAINSTORM)}
             />
+          </div>
+        )}
+
+        {stage === AppStage.PROFILE && (
+          <div className="w-full h-[calc(100vh-80px)] overflow-y-auto">
+            <ProfilePage onBack={() => setStage(AppStage.BRAINSTORM)} />
+          </div>
+        )}
+
+        {stage === AppStage.SETTINGS && (
+          <div className="w-full h-[calc(100vh-80px)] overflow-y-auto">
+            <SettingsPage onBack={() => setStage(AppStage.BRAINSTORM)} />
           </div>
         )}
       </main>
