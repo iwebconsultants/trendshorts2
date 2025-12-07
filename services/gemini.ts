@@ -4,8 +4,8 @@ import { StrategyOption, ShortConcept, ChatMessage } from "../types";
 // Initialize the client
 export const getAiClient = () => {
     // Check if API key is present in environment (injected by the runtime)
-    // We access process.env.API_KEY directly so it can be replaced by the bundler/vite
-    const apiKey = process.env.API_KEY;
+    // We access process.env.API_KEY or window.env.API_KEY
+    const apiKey = (window as any).env?.API_KEY || process.env.API_KEY;
 
     if (!apiKey) {
         throw new Error("API Key not found. Please select a key.");

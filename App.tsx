@@ -370,7 +370,7 @@ const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
       </header>
 
       {/* Main Content Area - Switched based on activeSection */}
-      <main className="flex-1">
+      <main className="flex-1 w-full h-full">
         {activeSection === 'HOME' && (
           <>
             {/* Hero Section */}
@@ -923,7 +923,7 @@ const App: React.FC = () => {
         )}
 
         {stage === AppStage.BRAINSTORM && (
-          <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
+          <div className="w-full mx-auto px-6 py-8 h-[calc(100vh-80px)]">
             <BrainstormStage
               onNext={handleBrainstormComplete}
               onLoginRequest={handleLogin}
@@ -933,7 +933,7 @@ const App: React.FC = () => {
         )}
 
         {stage === AppStage.CONTENT_GENERATION && selectedStrategy && (
-          <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
+          <div className="w-full mx-auto px-6 py-8 h-[calc(100vh-80px)]">
             <PrototypeDashboard
               genre={selectedGenre}
               strategy={selectedStrategy}
@@ -947,7 +947,7 @@ const App: React.FC = () => {
         )}
 
         {stage === AppStage.PUBLISH && (
-          <div className="max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)]">
+          <div className="w-full mx-auto px-6 py-8 h-[calc(100vh-80px)]">
             <PublishStage
               concept={generatedConcept}
               videoUrl={finalVideoUrl}
