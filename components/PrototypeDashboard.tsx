@@ -737,8 +737,8 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             {/* Split View Container */}
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
-                {/* Left Column: Editor & Config (Scrollable) */}
-                <div className="w-full lg:w-5/12 bg-slate-50 p-6 overflow-y-auto border-r border-slate-200 custom-scrollbar">
+                {/* Left Column: Editor & Config (Scrollable Sidebar) */}
+                <div className="w-full lg:w-[420px] xl:w-[480px] shrink-0 bg-white p-6 overflow-y-auto border-r border-slate-200 custom-scrollbar z-10 shadow-sm">
 
                     {/* Guide */}
                     {showGuide && (
@@ -867,11 +867,11 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                         </div>
                     )}
                 </div>
-                {/* Right Column: Preview Area (Scrollable) */}
-                <div className="w-full lg:w-7/12 bg-slate-100 p-6 overflow-y-auto custom-scrollbar">
+                {/* Right Column: Preview Area (Scrollable - Dark Theme) */}
+                <div className="flex-1 bg-slate-900 p-8 overflow-y-auto custom-scrollbar flex flex-col items-center">
 
                     {/* Main Visual Preview */}
-                    <div className="bg-slate-900 rounded-xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group mb-6">
+                    <div className="w-full max-w-[500px] bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group mb-8 border border-slate-800 ring-1 ring-slate-800/50">
                         {/* 1. Video (Veo) */}
                         {videoUrl && (
                             <video
@@ -974,25 +974,25 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                     )}
 
                     {/* Prompts List */}
-                    <div className="space-y-3">
+                    <div className="w-full max-w-[500px] space-y-3">
                         <div className="flex justify-between items-end">
-                            <p className="text-xs font-bold text-slate-400 uppercase">Visual Prompts (Video & Image)</p>
-                            <span className="text-[10px] text-slate-400 italic">Click text to edit</span>
+                            <p className="text-xs font-bold text-slate-500 uppercase">Visual Prompts (Video & Image)</p>
+                            <span className="text-[10px] text-slate-500 italic">Click text to edit</span>
                         </div>
                         {concept?.imagePrompts?.map((prompt, idx) => (
-                            <div key={idx} className="group bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs text-slate-700 flex gap-2 items-start transition-all hover:border-indigo-300 hover:shadow-sm relative">
+                            <div key={idx} className="group bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex gap-3 items-start transition-all hover:border-indigo-500/30 hover:bg-slate-800 hover:shadow-lg relative">
                                 <textarea
                                     value={prompt}
                                     onChange={(e) => handlePromptChange(idx, e.target.value)}
                                     title="Edit prompt for video or image generation"
-                                    className="flex-1 bg-transparent border border-transparent focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 rounded px-2 py-1.5 outline-none resize-y min-h-[6em] transition-all font-medium text-slate-600 focus:text-slate-900 pr-8"
+                                    className="flex-1 bg-transparent border border-transparent focus:bg-slate-700 focus:border-indigo-500/30 focus:ring-1 focus:ring-indigo-500/50 rounded-lg px-2 py-1.5 outline-none resize-y min-h-[5em] transition-all font-medium text-slate-400 focus:text-slate-200 pr-0 leading-relaxed custom-scrollbar"
                                     placeholder="Describe the scene, action, and camera movement..."
                                 />
-                                <div className="flex flex-col gap-1.5 shrink-0 pt-1">
+                                <div className="flex flex-col gap-2 shrink-0 pt-0.5">
                                     {hasVeo && (
                                         <button
                                             onClick={() => handleGenerateVideo(prompt)}
-                                            className="text-indigo-600 hover:text-indigo-700 bg-white hover:bg-indigo-50 p-2 rounded-md transition-colors shadow-sm border border-slate-200 hover:border-indigo-200"
+                                            className="text-indigo-400 hover:text-indigo-300 bg-slate-700 hover:bg-indigo-900/50 p-2.5 rounded-lg transition-all shadow-sm border border-slate-600 hover:border-indigo-500/50"
                                             title={`Generate ${videoDuration} video with Veo at ${videoResolution}`}
                                         >
                                             <Video size={16} />
@@ -1001,7 +1001,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                                     {hasImagen && (
                                         <button
                                             onClick={() => handleGenerateImage(prompt)}
-                                            className="text-purple-600 hover:text-purple-700 bg-white hover:bg-purple-50 p-2 rounded-md transition-colors shadow-sm border border-slate-200 hover:border-purple-200"
+                                            className="text-purple-400 hover:text-purple-300 bg-slate-700 hover:bg-purple-900/50 p-2.5 rounded-lg transition-all shadow-sm border border-slate-600 hover:border-purple-500/50"
                                             title="Generate static image with Imagen 3"
                                         >
                                             <ImageIcon size={16} />
@@ -1009,7 +1009,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                                     )}
                                     <button
                                         onClick={() => handleDeletePrompt(idx)}
-                                        className="text-slate-400 hover:text-red-600 bg-transparent hover:bg-red-50 p-2 rounded-md transition-colors"
+                                        className="text-slate-500 hover:text-red-400 bg-transparent hover:bg-red-900/20 p-2.5 rounded-lg transition-colors"
                                         title="Delete this prompt"
                                     >
                                         <Trash2 size={16} />
@@ -1021,7 +1021,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                             <button
                                 onClick={handleAddManualPrompt}
                                 title="Add a new blank prompt manually"
-                                className="flex-1 bg-white hover:bg-slate-50 text-slate-600 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-slate-200 transition-colors border-dashed"
+                                className="flex-1 bg-slate-800/50 hover:bg-slate-800 text-slate-500 hover:text-white font-medium py-3 rounded-xl text-xs flex items-center justify-center gap-2 border border-slate-700 border-dashed transition-all"
                             >
                                 <Plus size={14} /> Add Manual Prompt
                             </button>
