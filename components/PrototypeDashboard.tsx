@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StrategyOption, ToolOption, ShortConcept, SavedProject, RefinedStrategy } from '../types';
 import { generateShortConcept, generateVideoAsset, generateVoiceover, generateImageAsset, generateMoreImagePrompts } from '../services/gemini';
+import { composeVideo } from '../services/videoComposer';
 import {
     Loader2, Play, LayoutTemplate, FileText, Image as ImageIcon,
     RefreshCcw, UploadCloud, Film, Youtube, Globe, Mic, Volume2, Pause, ArrowLeft, Video, SkipBack, SkipForward, Upload, Share2, Link, Plus, Save, Trash2, Palette, Clock, HelpCircle, AlertCircle, Zap, Monitor, RotateCcw,
-    Settings, Wrench, Check, X
+    Settings, Wrench, Check, X, Download
 } from 'lucide-react';
 import { IntegrationType } from '../types';
 
@@ -76,6 +77,12 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
     const hasAutoTriggered = useRef(false);
+
+    // Video Composition State
+    const [composedVideoBlob, setComposedVideoBlob] = useState<Blob | null>(null);
+    const [composedVideoUrl, setComposedVideoUrl] = useState<string | null>(null);
+    const [isComposing, setIsComposing] = useState(false);
+    const [compositionProgress, setCompositionProgress] = useState(0);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
@@ -156,6 +163,15 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             }
         }
     }, [concept, isGenerating]);
+
+    // AUTO-COMPOSITION: Merge video + audio when both ready
+    useEffect(() => {
+        const videoSource = videoUrl || motionUrls;
+        if (videoSource && audioBase64 && !composedVideoBlob && !isComposing) {
+            console.log('Auto-triggering video composition...');
+            setTimeout(() => handleComposeVideo(), 1500);
+        }
+    }, [videoUrl, motionUrls, audioBase64, composedVideoBlob, isComposing]);
 
     // Initialize Web Audio API
     useEffect(() => {
@@ -492,6 +508,54 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
         } finally {
             setIsAudioLoading(false);
         }
+    };
+
+    const handleComposeVideo = async () => {
+        if (!concept) return;
+
+        const videoSource = videoUrl || motionUrls;
+        if (!videoSource || !audioBase64) {
+            console.log('Missing video or audio for composition');
+            return;
+        }
+
+        setIsComposing(true);
+        setCompositionProgress(0);
+
+        try {
+            const durationSeconds = parseInt(videoDuration.replace('s', ''));
+            const blob = await composeVideo(
+                videoSource,
+                audioBase64,
+                durationSeconds,
+                (progress) => setCompositionProgress(progress)
+            );
+
+            // Create object URL for preview
+            const url = URL.createObjectURL(blob);
+            setComposedVideoBlob(blob);
+            setComposedVideoUrl(url);
+
+            console.log('Video composition complete!', url);
+        } catch (error) {
+            console.error('Composition error:', error);
+            alert(`Failed to compose video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsComposing(false);
+        }
+    };
+
+    const handleDownloadVideo = () => {
+        if (!composedVideoBlob) return;
+
+        const url = URL.createObjectURL(composedVideoBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${concept?.topic || 'trendshorts'}-final.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     const handleMorePrompts = async () => {
@@ -940,7 +1004,54 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                                 <p className="text-sm text-slate-600">Select a prompt on the right to generate.</p>
                             </div>
                         )}
+
+                        {/* 6. Composition Overlay */}
+                        {isComposing && (
+                            <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-white z-20 backdrop-blur-sm">
+                                <Loader2 size={56} className="animate-spin mb-6 text-indigo-400" />
+                                <p className="text-xl font-bold mb-2">Composing Final Video</p>
+                                <p className="text-sm text-slate-400 mb-4">Merging video and audio tracks...</p>
+                                <div className="w-64 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-indigo-500 transition-all duration-300"
+                                        style={{ width: `${compositionProgress}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500 mt-2">{compositionProgress}%</p>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Composed Video Preview (Final) */}
+                    {composedVideoUrl && (
+                        <div className="w-full max-w-[500px] mb-8">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
+                                    <Check size={16} className="bg-emerald-400/20 rounded-full p-0.5" />
+                                    Final Video Ready
+                                </div>
+                                <button
+                                    onClick={handleDownloadVideo}
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg"
+                                >
+                                    <Download size={16} />
+                                    Download MP4
+                                </button>
+                            </div>
+                            <div className="bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl border border-emerald-500/30 ring-2 ring-emerald-500/20">
+                                <video
+                                    src={composedVideoUrl}
+                                    className="w-full h-full object-cover"
+                                    controls
+                                    autoPlay
+                                    loop
+                                />
+                                <div className="absolute top-4 right-4 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                                    FINAL
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Asset URL Display */}
                     {(videoUrl || imageUrl) && (
