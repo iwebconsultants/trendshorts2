@@ -20,8 +20,8 @@ async function loadFFmpeg(): Promise<FFmpeg> {
             console.log('[FFmpeg]', message);
         });
 
-        // Load FFmpeg core (use CDN for better caching)
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+        // Load FFmpeg core (use single-threaded version to avoid SharedArrayBuffer/Header issues)
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
         await ffmpeg.load({
             coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
             wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -33,6 +33,14 @@ async function loadFFmpeg(): Promise<FFmpeg> {
     })();
 
     return loadPromise;
+}
+
+/**
+ * Load a font file for captions
+ */
+async function loadFont(ffmpeg: FFmpeg): Promise<void> {
+    const fontUrl = 'https://raw.githubusercontent.com/ffmpegwasm/testdata/master/arial.ttf';
+    await ffmpeg.writeFile('arial.ttf', await fetchFile(fontUrl));
 }
 
 /**
@@ -130,16 +138,20 @@ async function createVideoFromImages(
 }
 
 /**
- * Compose final video with audio
- * @param videoSource - Video URL (for Veo) or array of image URLs (for Flux Motion)
- * @param audioBase64 - Base64 encoded PCM audio
- * @param duration - Target duration in seconds
- * @param onProgress - Optional progress callback (0-100)
+ * Compose final video with audio, music, and captions
+ * @param videoSource - Video URL or image URLs
+ * @param audioBase64 - Voiceover audio
+ * @param duration - Duration in seconds
+ * @param captionText - Text to overlay (optional)
+ * @param musicUrl - Background music URL (optional)
+ * @param onProgress - Progress callback
  */
 export async function composeVideo(
     videoSource: string | string[],
     audioBase64: string,
     duration: number = 30,
+    captionText?: string,
+    musicUrl?: string,
     onProgress?: (progress: number) => void
 ): Promise<Blob> {
     try {
@@ -149,33 +161,86 @@ export async function composeVideo(
         const ffmpeg = await loadFFmpeg();
         onProgress?.(10);
 
-        // Convert audio to WAV
+        // Load Font for captions
+        if (captionText) {
+            await loadFont(ffmpeg);
+        }
+
+        // Write Voiceover
         const audioWav = base64ToWav(audioBase64);
-        await ffmpeg.writeFile('audio.wav', await fetchFile(audioWav));
+        await ffmpeg.writeFile('voice.wav', await fetchFile(audioWav));
+
+        // Handle Music
+        let hasMusic = false;
+        if (musicUrl) {
+            try {
+                await ffmpeg.writeFile('music.mp3', await fetchFile(musicUrl));
+                hasMusic = true;
+            } catch (e) {
+                console.warn('Failed to load music, proceeding without it', e);
+            }
+        }
         onProgress?.(20);
 
-        // Handle video input
+        // Handle Video Input
         if (Array.isArray(videoSource)) {
             // Flux Motion - create video from images
             await createVideoFromImages(ffmpeg, videoSource, duration);
-            onProgress?.(50);
+            onProgress?.(40);
         } else {
             // Veo - download video
             const videoData = await fetchFile(videoSource);
             await ffmpeg.writeFile('temp_video.mp4', videoData);
-            onProgress?.(50);
+            onProgress?.(40);
         }
 
-        // Merge video and audio
-        await ffmpeg.exec([
-            '-i', 'temp_video.mp4',
-            '-i', 'audio.wav',
-            '-c:v', 'copy',
+        // Build FFmpeg Command
+        // Complex filter components
+        const inputs = ['-i', 'temp_video.mp4', '-i', 'voice.wav'];
+        if (hasMusic) inputs.push('-i', 'music.mp3');
+
+        let filterComplex = '';
+
+        // 1. Audio Mixing (Voice + Music)
+        if (hasMusic) {
+            // Mix voice (volume 1.0) and music (volume 0.2)
+            filterComplex += `[1:a]volume=1.0[a1];[2:a]volume=0.2[a2];[a1][a2]amix=inputs=2:duration=first:dropout_transition=2[aout];`;
+        } else {
+            filterComplex += `[1:a]volume=1.0[aout];`;
+        }
+
+        // 2. Video Text (Captions)
+        // Draw text box at bottom with black background
+        let videoStream = '[0:v]';
+        if (captionText) {
+            // Clean text for FFmpeg (escape special chars)
+            const sanitizedText = captionText.replace(/:/g, '\\:').replace(/'/g, '').slice(0, 100) + '...';
+            // Draw text
+            /*
+             drawtext=fontfile=arial.ttf:text='...':fontcolor=white:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-50
+            */
+            filterComplex += `${videoStream}drawtext=fontfile=arial.ttf:text='${sanitizedText}':fontcolor=white:fontsize=32:box=1:boxcolor=black@0.6:boxborderw=10:x=(w-text_w)/2:y=h-th-100[vout]`;
+        } else {
+            filterComplex += `${videoStream}copy[vout]`; // Pass through if no text
+        }
+
+        // Execute Command
+        const cmd = [
+            ...inputs,
+            '-filter_complex', filterComplex,
+            '-map', (captionText ? '[vout]' : '0:v'),
+            '-map', '[aout]',
+            '-c:v', 'libx264', // Re-encode video for text
             '-c:a', 'aac',
             '-b:a', '192k',
             '-shortest',
             'output.mp4'
-        ]);
+        ];
+
+        // If simple copy (no text/music), we can optimise, but user wants features. 
+        // Re-encoding is necessary for text overlay.
+
+        await ffmpeg.exec(cmd);
         onProgress?.(90);
 
         // Read output
@@ -185,7 +250,9 @@ export async function composeVideo(
         const blob = new Blob([uint8Array.buffer as ArrayBuffer], { type: 'video/mp4' });
 
         // Cleanup
-        await ffmpeg.deleteFile('audio.wav');
+        await ffmpeg.deleteFile('voice.wav');
+        if (hasMusic) await ffmpeg.deleteFile('music.mp3');
+        if (captionText) await ffmpeg.deleteFile('arial.ttf');
         await ffmpeg.deleteFile('temp_video.mp4');
         await ffmpeg.deleteFile('output.mp4');
         if (Array.isArray(videoSource)) {

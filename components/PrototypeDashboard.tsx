@@ -524,10 +524,19 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
 
         try {
             const durationSeconds = parseInt(videoDuration.replace('s', ''));
+            // Use topic as caption for now (syncing whole script text is complex without subtitles file)
+            const captionText = concept.topic;
+            // Placeholder royalty-free music (optional - can be toggleable later)
+            // Using a reliable short sample data URI or public URL would be better.
+            // For now, let's leave music undefined until we have a proper asset library.
+            const musicUrl = undefined;
+
             const blob = await composeVideo(
                 videoSource,
                 audioBase64,
                 durationSeconds,
+                captionText,
+                musicUrl,
                 (progress) => setCompositionProgress(progress)
             );
 
