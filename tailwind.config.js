@@ -2,9 +2,10 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./App.tsx",
+    "./index.tsx",
     "./components/**/*.{js,ts,jsx,tsx}",
-    "./types.ts" // In case there are classes in types (unlikely but safe)
+    "./services/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
     extend: {},
