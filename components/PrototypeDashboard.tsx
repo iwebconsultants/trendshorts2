@@ -932,10 +932,10 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                     )}
                 </div>
                 {/* Right Column: Preview Area (Scrollable - Dark Theme) */}
-                <div className="flex-1 bg-slate-900 p-8 overflow-y-auto custom-scrollbar flex flex-col items-center">
+                <div className="flex-1 bg-slate-900 p-6 lg:p-8 overflow-y-auto custom-scrollbar flex flex-col">
 
                     {/* Main Visual Preview */}
-                    <div className="w-full max-w-[500px] bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group mb-8 border border-slate-800 ring-1 ring-slate-800/50">
+                    <div className="w-full max-w-md lg:max-w-lg xl:max-w-2xl mx-auto bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group mb-8 border border-slate-800 ring-1 ring-slate-800/50">
                         {/* 1. Video (Veo) */}
                         {videoUrl && (
                             <video
@@ -1024,7 +1024,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
 
                     {/* Composed Video Preview (Final) */}
                     {composedVideoUrl && (
-                        <div className="w-full max-w-[500px] mb-8">
+                        <div className="w-full max-w-md lg:max-w-lg xl:max-w-2xl mx-auto mb-8">
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
                                     <Check size={16} className="bg-emerald-400/20 rounded-full p-0.5" />
@@ -1085,7 +1085,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                     )}
 
                     {/* Prompts List */}
-                    <div className="w-full max-w-[500px] space-y-3">
+                    <div className="w-full max-w-md lg:max-w-lg xl:max-w-2xl mx-auto space-y-3">
                         <div className="flex justify-between items-end">
                             <p className="text-xs font-bold text-slate-500 uppercase">Visual Prompts (Video & Image)</p>
                             <span className="text-[10px] text-slate-500 italic">Click text to edit</span>
