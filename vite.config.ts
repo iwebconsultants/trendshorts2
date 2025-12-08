@@ -11,6 +11,12 @@ export default defineConfig(({ mode }) => {
     define: {
       // Safely stringify the API key to avoid object replacement issues during build
       'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY || '')
+    },
+    server: {
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      }
     }
   }
 })

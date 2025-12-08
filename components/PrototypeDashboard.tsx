@@ -164,10 +164,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
         }
     }, [concept, isGenerating]);
 
-    // AUTO-COMPOSITION: Disabled until server headers configured for FFmpeg.wasm
-    // Requires: Cross-Origin-Opener-Policy: same-origin
-    //          Cross-Origin-Embedder-Policy: require-corp
-    /*
+    // AUTO-COMPOSITION: Merge video + audio when both ready
     useEffect(() => {
         const videoSource = videoUrl || motionUrls;
         if (videoSource && audioBase64 && !composedVideoBlob && !isComposing) {
@@ -175,7 +172,6 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             setTimeout(() => handleComposeVideo(), 1500);
         }
     }, [videoUrl, motionUrls, audioBase64, composedVideoBlob, isComposing]);
-    */
 
     // Initialize Web Audio API
     useEffect(() => {
