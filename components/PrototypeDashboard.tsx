@@ -164,7 +164,10 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
         }
     }, [concept, isGenerating]);
 
-    // AUTO-COMPOSITION: Merge video + audio when both ready
+    // AUTO-COMPOSITION: Disabled until server headers configured for FFmpeg.wasm
+    // Requires: Cross-Origin-Opener-Policy: same-origin
+    //          Cross-Origin-Embedder-Policy: require-corp
+    /*
     useEffect(() => {
         const videoSource = videoUrl || motionUrls;
         if (videoSource && audioBase64 && !composedVideoBlob && !isComposing) {
@@ -172,6 +175,7 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             setTimeout(() => handleComposeVideo(), 1500);
         }
     }, [videoUrl, motionUrls, audioBase64, composedVideoBlob, isComposing]);
+    */
 
     // Initialize Web Audio API
     useEffect(() => {
@@ -798,11 +802,11 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
             )}
 
 
-            {/* Split View Container */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            {/* 3-Column Layout: Controls | Prompts | Video */}
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden gap-0">
 
-                {/* Left Column: Editor & Config (Scrollable Sidebar) */}
-                <div className="w-full lg:w-[420px] xl:w-[480px] shrink-0 bg-white p-6 overflow-y-auto border-r border-slate-200 custom-scrollbar z-10 shadow-sm">
+                {/* Column 1: Editor & Config */}
+                <div className="w-full lg:w-[360px] xl:w-[420px] shrink-0 bg-white p-6 overflow-y-auto border-r border-slate-200 custom-scrollbar z-10 shadow-sm">
 
                     {/* Guide */}
                     {showGuide && (
@@ -931,165 +935,17 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                         </div>
                     )}
                 </div>
-                {/* Right Column: Preview Area (Scrollable - Dark Theme) */}
-                <div className="flex-1 bg-slate-900 p-6 lg:p-8 overflow-y-auto custom-scrollbar flex flex-col">
 
-                    {/* Main Visual Preview */}
-                    <div className="w-full max-w-md lg:max-w-lg xl:max-w-2xl mx-auto bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group mb-8 border border-slate-800 ring-1 ring-slate-800/50">
-                        {/* 1. Video (Veo) */}
-                        {videoUrl && (
-                            <video
-                                src={videoUrl}
-                                className="w-full h-full object-cover"
-                                controls
-                                autoPlay
-                                loop
-                                muted
-                            />
-                        )}
-
-                        {/* 2. Flux Motion (Slideshow) */}
-                        {motionUrls && !videoUrl && (
-                            <div className="w-full h-full relative overflow-hidden">
-                                {motionUrls.map((url, i) => (
-                                    <div
-                                        key={i}
-                                        className="absolute inset-0 w-full h-full bg-cover bg-center animate-ken-burns"
-                                        style={{
-                                            backgroundImage: `url(${url})`,
-                                            animationDelay: `${i * 3}s`,
-                                            opacity: 0
-                                        }}
-                                    />
-                                ))}
-                                {/* Add Inline Styles for Animation directly here for portability */}
-                                <style>{`
-                            @keyframes ken-burns {
-                                0% { opacity: 0; transform: scale(1); }
-                                10% { opacity: 1; }
-                                90% { opacity: 1; }
-                                100% { opacity: 0; transform: scale(1.1); }
-                            }
-                            .animate-ken-burns {
-                                animation: ken-burns 9s infinite;
-                            }
-                        `}</style>
-                                <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-                                    Generated with Flux Motion
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. Static Image */}
-                        {imageUrl && !videoUrl && !motionUrls && (
-                            <img src={imageUrl} alt="Generated Asset" className="w-full h-full object-cover" />
-                        )}
-
-                        {/* 4. Loading State */}
-                        {(isVideoLoading || isImageLoading) && (
-                            <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center text-white z-10">
-                                <Loader2 size={48} className="animate-spin mb-4 text-indigo-500" />
-                                <p className="font-bold animate-pulse">
-                                    {isVideoLoading ? (videoProvider === 'veo' ? 'Rendering with Veo...' : 'Creating Motion Sequence...') : 'Generating Image...'}
-                                </p>
-                                {isVideoLoading && videoProvider === 'flux-motion' && <p className="text-xs text-slate-400 mt-2">Generating 3 sequential frames</p>}
-                            </div>
-                        )}
-
-                        {/* 5. Placeholder */}
-                        {!videoUrl && !imageUrl && !motionUrls && !isVideoLoading && !isImageLoading && (
-                            <div className="text-center p-8 opacity-40">
-                                <Film size={48} className="mx-auto mb-4 text-slate-600" />
-                                <h3 className="text-xl font-bold text-slate-500 mb-2">Preview Placeholder</h3>
-                                <p className="text-sm text-slate-600">Select a prompt on the right to generate.</p>
-                            </div>
-                        )}
-
-                        {/* 6. Composition Overlay */}
-                        {isComposing && (
-                            <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-white z-20 backdrop-blur-sm">
-                                <Loader2 size={56} className="animate-spin mb-6 text-indigo-400" />
-                                <p className="text-xl font-bold mb-2">Composing Final Video</p>
-                                <p className="text-sm text-slate-400 mb-4">Merging video and audio tracks...</p>
-                                <div className="w-64 h-2 bg-slate-800 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-indigo-500 transition-all duration-300"
-                                        style={{ width: `${compositionProgress}%` }}
-                                    />
-                                </div>
-                                <p className="text-xs text-slate-500 mt-2">{compositionProgress}%</p>
-                            </div>
-                        )}
+                {/* Column 2: Prompts List (Middle - Dark Theme) */}
+                <div className="flex-1 bg-slate-900 p-6 overflow-y-auto custom-scrollbar border-r border-slate-800">
+                    {/* Prompts Header */}
+                    <div className="flex justify-between items-end mb-4">
+                        <p className="text-xs font-bold text-slate-500 uppercase">Visual Prompts (Video & Image)</p>
+                        <span className="text-[10px] text-slate-500 italic">Click text to edit</span>
                     </div>
 
-                    {/* Composed Video Preview (Final) */}
-                    {composedVideoUrl && (
-                        <div className="w-full max-w-md lg:max-w-lg xl:max-w-2xl mx-auto mb-8">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
-                                    <Check size={16} className="bg-emerald-400/20 rounded-full p-0.5" />
-                                    Final Video Ready
-                                </div>
-                                <button
-                                    onClick={handleDownloadVideo}
-                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg"
-                                >
-                                    <Download size={16} />
-                                    Download MP4
-                                </button>
-                            </div>
-                            <div className="bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl border border-emerald-500/30 ring-2 ring-emerald-500/20">
-                                <video
-                                    src={composedVideoUrl}
-                                    className="w-full h-full object-cover"
-                                    controls
-                                    autoPlay
-                                    loop
-                                />
-                                <div className="absolute top-4 right-4 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-                                    FINAL
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Asset URL Display */}
-                    {(videoUrl || imageUrl) && (
-                        <div className="mb-6 bg-slate-50 p-3 rounded-lg border border-slate-200 overflow-hidden">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Link size={12} className="text-slate-400" />
-                                <label className="text-[10px] font-bold text-slate-500 uppercase">Asset URL</label>
-                            </div>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    readOnly
-                                    value={videoUrl || imageUrl || ''}
-                                    title="Click to select asset URL"
-                                    className="flex-1 bg-white border border-slate-200 text-[10px] text-slate-600 rounded px-2 py-1 font-mono truncate focus:outline-none focus:border-indigo-500"
-                                    onClick={(e) => e.currentTarget.select()}
-                                />
-                                {(videoUrl || imageUrl) && (
-                                    <a
-                                        href={videoUrl || imageUrl || '#'}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        title="Open media in a new tab"
-                                        className="bg-white border border-slate-200 p-1 rounded hover:text-indigo-600 hover:border-indigo-300 transition-colors"
-                                    >
-                                        <Globe size={14} />
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Prompts List */}
-                    <div className="w-full max-w-md lg:max-w-lg xl:max-w-2xl mx-auto space-y-3">
-                        <div className="flex justify-between items-end">
-                            <p className="text-xs font-bold text-slate-500 uppercase">Visual Prompts (Video & Image)</p>
-                            <span className="text-[10px] text-slate-500 italic">Click text to edit</span>
-                        </div>
+                    <div className="space-y-3">
                         {concept?.imagePrompts?.map((prompt, idx) => (
                             <div key={idx} className="group bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex gap-3 items-start transition-all hover:border-indigo-500/30 hover:bg-slate-800 hover:shadow-lg relative">
                                 <textarea
@@ -1128,6 +984,8 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                                 </div>
                             </div>
                         ))}
+
+                        {/* Add Prompt Buttons */}
                         <div className="flex gap-2">
                             <button
                                 onClick={handleAddManualPrompt}
@@ -1140,16 +998,115 @@ export const PrototypeDashboard: React.FC<Props> = ({ genre, strategy, onBack, o
                                 onClick={handleMorePrompts}
                                 disabled={isMorePromptsLoading}
                                 title="Generate 3 additional image prompts using AI"
-                                className="flex-[2] bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-slate-200 transition-colors"
+                                className="flex-[2] bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-2 border border-indigo-500/30 transition-colors"
                             >
                                 {isMorePromptsLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
                                 Generate 3 More AI Prompts
                             </button>
                         </div>
                     </div>
-
                 </div>
 
+                {/* Column 3: Video Preview (Right - Vertical, Prominent) */}
+                <div className="w-full lg:w-[400px] xl:w-[480px] shrink-0 bg-black p-6 overflow-y-auto custom-scrollbar flex flex-col items-center gap-4">
+                    {/* Main Visual Preview */}
+                    <div className="w-full bg-black rounded-2xl overflow-hidden aspect-[9/16] relative shadow-2xl flex items-center justify-center group border border-slate-800 ring-1 ring-slate-800/50">
+                        {/* 1. Video (Veo) */}
+                        {videoUrl && (
+                            <video
+                                src={videoUrl}
+                                className="w-full h-full object-cover"
+                                controls
+                                autoPlay
+                                loop
+                                muted
+                            />
+                        )}
+
+                        {/* 2. Flux Motion (Slideshow) */}
+                        {motionUrls && !videoUrl && (
+                            <div className="w-full h-full relative overflow-hidden">
+                                {motionUrls.map((url, i) => (
+                                    <div
+                                        key={i}
+                                        className="absolute inset-0 w-full h-full bg-cover bg-center animate-ken-burns"
+                                        style={{
+                                            backgroundImage: `url(${url})`,
+                                            animationDelay: `${i * 3}s`,
+                                            opacity: 0
+                                        }}
+                                    />
+                                ))}
+                                <style>{`
+                            @keyframes ken-burns {
+                                0% { opacity: 0; transform: scale(1); }
+                                10% { opacity: 1; }
+                                90% { opacity: 1; }
+                                100% { opacity: 0; transform: scale(1.1); }
+                            }
+                            .animate-ken-burns {
+                                animation: ken-burns 9s infinite;
+                            }
+                        `}</style>
+                                <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                                    Generated with Flux Motion
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. Static Image */}
+                        {imageUrl && !videoUrl && !motionUrls && (
+                            <img src={imageUrl} alt="Generated Asset" className="w-full h-full object-cover" />
+                        )}
+
+                        {/* 4. Loading State */}
+                        {(isVideoLoading || isImageLoading) && (
+                            <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center text-white z-10">
+                                <Loader2 size={48} className="animate-spin mb-4 text-indigo-500" />
+                                <p className="font-bold animate-pulse text-sm">
+                                    {isVideoLoading ? (videoProvider === 'veo' ? 'Rendering with Veo...' : 'Creating Motion...') : 'Generating Image...'}
+                                </p>
+                                {isVideoLoading && videoProvider === 'flux-motion' && <p className="text-xs text-slate-400 mt-2">Generating 3 frames</p>}
+                            </div>
+                        )}
+
+                        {/* 5. Placeholder */}
+                        {!videoUrl && !imageUrl && !motionUrls && !isVideoLoading && !isImageLoading && (
+                            <div className="text-center p-8 opacity-40">
+                                <Film size={48} className="mx-auto mb-4 text-slate-600" />
+                                <h3 className="text-xl font-bold text-slate-500 mb-2">Preview</h3>
+                                <p className="text-sm text-slate-600">Select a prompt to generate</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Asset URL (if exists) */}
+                    {(videoUrl || imageUrl) && (
+                        <div className="w-full bg-slate-900 p-3 rounded-lg border border-slate-700">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Link size={12} className="text-slate-500" />
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Asset URL</label>
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={videoUrl || imageUrl || ''}
+                                    className="flex-1 bg-black border border-slate-700 text-[10px] text-slate-400 rounded px-2 py-1 font-mono truncate focus:outline-none"
+                                    onClick={(e) => e.currentTarget.select()}
+                                />
+                                <a
+                                    href={videoUrl || imageUrl || '#'}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="bg-slate-800 border border-slate-700 p-1.5 rounded hover:text-indigo-400 hover:border-indigo-500 transition-colors"
+                                >
+                                    <Globe size={14} />
+                                </a>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
